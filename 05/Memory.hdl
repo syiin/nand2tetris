@@ -27,18 +27,11 @@ CHIP Memory {
     OUT out[16];
 
     PARTS:
-    Keyboard(out=);
-    Screen(in=, load=, address=, out=);
+    DMux(in=load, sel=address[14], a=writemem, b=writescrn);
     
+    RAM16K(in=in, load=writemem, address=address[0..13], out=memout); //main memory
+    Keyboard(out=kdbout); //keyboard 1100 0000 0000 00, 24576
+    Screen(in=in, load=writescrn, address=address[0..12], out=scrnout); //screen memory 1000 0000 0000 00, 16384 - 1011 1111 1111 11, 24575
 
-    RAM16K(in=in, load=writescrn, address=address, out=out); //screen memory 1000 0000 0000 00, 16384 - 1011 1111 1111 11, 24575
-    
-    And(a=address[0], b=address[1], out=writekbd);
-    Register(in=in, load=writekbd, out=out); //keyboard 1100 0000 0000 00, 24576
-
-    Not(in=address[0], out=notper);
-    Nand(a=notper, b=load, out=writemem);
-    RAM16K(in=in, load=writemem, address=address[0..13], out=out); //main memory
-
-    Mux4Way16(a=, b=, c=, d=, sel=, out=);
+    Mux4Way16(a=memout, b=memout, c=scrnout, d=kdbout, sel=address[13..14], out=out);
 }
