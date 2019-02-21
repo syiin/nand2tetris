@@ -27,5 +27,18 @@ CHIP Memory {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+    Keyboard(out=);
+    Screen(in=, load=, address=, out=);
+    
+
+    RAM16K(in=in, load=writescrn, address=address, out=out); //screen memory 1000 0000 0000 00, 16384 - 1011 1111 1111 11, 24575
+    
+    And(a=address[0], b=address[1], out=writekbd);
+    Register(in=in, load=writekbd, out=out); //keyboard 1100 0000 0000 00, 24576
+
+    Not(in=address[0], out=notper);
+    Nand(a=notper, b=load, out=writemem);
+    RAM16K(in=in, load=writemem, address=address[0..13], out=out); //main memory
+
+    Mux4Way16(a=, b=, c=, d=, sel=, out=);
 }

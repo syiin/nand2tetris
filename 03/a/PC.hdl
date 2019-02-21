@@ -16,8 +16,6 @@ CHIP PC {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
-
     //Incrementor    
     Inc16(in=inout, out=incout1);
     Mux16(a=inout, b=incout1, sel=inc, out=incout2);

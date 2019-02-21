@@ -39,5 +39,49 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
+    //Check for instruction
+    Not(in=instruction[15], out=ainstr);
+    Not(in=ainstr, out=cinstr);
+
+    //A Register 
+    And(a=cinstr, b=instruction[5], out=computea); //check for c instruction case 
+    Or(a=ainstr, b=computea, out=writea); //if either a instr OR c instr with d1 = 1  
+    Mux16(a=instruction, b=aluout, sel=instruction[15], out=ain); //check for either ALU load or instruction (ie. @100 or A = A+1)
+    ARegister(in=ain, load=writea, out=areg);  
+
+    //D Register
+    And(a=instruction[4], b=cinstr, out=writed);  //if it's a C instruction and d2 = 1
+    DRegister(in=aluout, load=writed, out=dreg);
+    
+    //ALU 
+    Mux16(a=areg, b=inM, sel=instruction[12], out=aorm); //check for inM vs A register with the a-bit 
+    ALU(x=dreg, y=aorm, 
+    zx=instruction[11], 
+    nx=instruction[10], 
+    zy=instruction[9], 
+    ny=instruction[8], 
+    f=instruction[7], 
+    no=instruction[6], 
+    out=aluout,
+    zr=zr,ng=ng);
+
+    //Control flow
+    Not(in=zr,out=nzr);
+    Not(in=ng,out=nng);
+    And(a=nzr,b=nng,out=pos);
+    And(a=instruction[2],b=ng,out=jlt); //if -ve & <0
+    And(a=instruction[1],b=zr,out=jz); // if 0 & =0
+    And(a=instruction[0],b=pos,out=jpos); //if +ve & >0 
+    Or(a=jlt,b=jz,out=jltz); 
+    Or(a=jltz,b=jpos,out=jumpcondition); //if any of the above is true
+    And(a=cinstr,b=jumpcondition,out=pcjmp); //AND it's a c instruction
+
+    PC(in=areg, load=pcjmp, inc=true, reset=reset, out[0..14]=pc); //load the PC with the a register 
+
+    //writeM
+    And(a=cinstr, b=instruction[3], out=writeM);
+    //addressM
+    And16(a=areg, b=true, out[0..14]=addressM); // a ccc ccc d1 d2 d3 j1 j2 j3
+    //outM
+    And16(a=aluout, b=true, out=outM);   
 }
