@@ -7,24 +7,27 @@
 
 class Parser
 {
-public:
-  std::string fileName;
+private:
   std::vector<std::string> tokens;
 
+public:
+  //constructor
   Parser(std::string inputFile)
   {
-    std::cout << inputFile << std::endl;
-    fileName = inputFile;
-
-    loadTokens();
+    loadTokens(inputFile);
   };
 
-  void loadTokens()
+  void loadTokens(std::string fileName)
   {
     std::ifstream input(fileName);
     for (std::string line; getline(input, line);)
     {
-      tokens.push_back(line);
+      //check for comments & white space
+      if (line[0] != '/' && line[1] != '/' && line.find_first_not_of("\t\n\v\f\r") != std::string::npos)
+      {
+        //if not a comment or white space, add to array of tokens
+        tokens.push_back(line);
+      }
     };
   };
 
@@ -40,6 +43,11 @@ public:
   {
     return tokens[idx];
   };
+
+  int numberOfTokens()
+  {
+    return tokens.size();
+  }
 };
 
 #endif
