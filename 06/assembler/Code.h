@@ -31,7 +31,7 @@ public:
     };
   };
 
-  std::string checkAorC(std::string inputString)
+  void checkAorC(std::string inputString)
   {
     if (inputString[0] == '@')
     {
@@ -41,7 +41,6 @@ public:
     {
       std::cout << "It's a C instruction" << std::endl;
     };
-    return inputString;
   };
 };
 
