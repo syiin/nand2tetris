@@ -212,10 +212,14 @@ public:
 
   void showTokens()
   {
+    std::cout << "=======================================" << std::endl;
+    std::cout << "TOKENS" << std::endl;
+    std::cout << "=======================================" << std::endl;
     for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it)
     {
       std::cout << *it << std::endl;
     };
+    std::cout << "=======================================" << std::endl;
   };
 
   std::string getTokenIdx(int idx)

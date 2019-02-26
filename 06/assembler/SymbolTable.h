@@ -56,10 +56,13 @@ public:
 
   void showSymbols()
   {
+    std::cout << "SYMBOL TABLE" << std::endl;
+    std::cout << "=======================================" << std::endl;
     for (std::map<std::string, int>::iterator it = symbols.begin(); it != symbols.end(); ++it)
     {
       std::cout << it->first << "\t" << it->second << std::endl;
     };
+    std::cout << "=======================================" << std::endl;
   };
 
   void initTables()
