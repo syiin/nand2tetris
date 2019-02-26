@@ -37,9 +37,9 @@ public:
 
   std::string advance()
   {
-    if (hasMoreCommands() == 1)
+    if (hasMoreCommands() == 1 && (commandType() != "L_COMMAND"))
     {
-      line++;
+      line = line + 1;
     };
   };
 
@@ -87,14 +87,12 @@ public:
       {
         int start = 0;
         int end = tokens[line].find(';');
-
         return tokens[line].substr(start, end);
       }
       else
       {
         int start = tokens[line].find('=') + 1;
         int end = tokens[line].find('\0');
-
         return removeSpaces(tokens[line].substr(start, end));
       }
     };
@@ -122,6 +120,14 @@ public:
   {
     return tokens[line];
   }
+
+  void removeLCommand()
+  {
+    if (commandType() == "L_COMMAND")
+    {
+      tokens.erase(tokens.begin() + line);
+    };
+  };
 
   int getLine()
   {

@@ -10,7 +10,7 @@ class SymbolTable
 
 private:
   std::map<std::string, int> symbols;
-  int n;
+  int n = 16;
 
 public:
   SymbolTable()
@@ -21,29 +21,46 @@ public:
 
   int contains(std::string labelValue)
   {
-    if (symbols[labelValue] == 0)
+
+    if (symbols.count(labelValue))
     {
-      return 0;
+      return 1;
     }
     else
     {
-      return symbols[labelValue];
+      return 0;
     };
   }
 
-  void addSymbol(std::string labelValue)
+  void addLabel(std::string labelKey, int memLocation)
   {
-    if (contains(labelValue) == 0)
+    symbols[labelKey] = memLocation;
+  };
+
+  void addVariable(std::string varKey)
+  {
+    if (!contains(varKey))
     {
-      symbols[labelValue] = n;
+      symbols[varKey] = n;
       n++;
     };
   };
 
   int getSymbol(std::string labelValue)
   {
-    return symbols[labelValue];
+    if (contains(labelValue))
+    {
+      return symbols[labelValue];
+    };
   }
+
+  void showSymbols()
+  {
+    for (std::map<std::string, int>::iterator it = symbols.begin(); it != symbols.end(); ++it)
+    {
+      std::cout << it->first << "\t" << it->second << std::endl;
+    };
+  };
 
   void initTables()
   {
