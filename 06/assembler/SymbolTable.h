@@ -10,13 +10,33 @@ class SymbolTable
 
 private:
   std::map<std::string, int> symbols;
+  int n;
 
 public:
-  void addSymbol(std::string labelValue, int memLocation)
+  SymbolTable()
+  {
+    n = 16;
+    initTables();
+  };
+
+  int contains(std::string labelValue)
   {
     if (symbols[labelValue] == 0)
     {
-      symbols[labelValue] = memLocation;
+      return 0;
+    }
+    else
+    {
+      return symbols[labelValue];
+    };
+  }
+
+  void addSymbol(std::string labelValue)
+  {
+    if (contains(labelValue) == 0)
+    {
+      symbols[labelValue] = n;
+      n++;
     };
   };
 
@@ -24,6 +44,36 @@ public:
   {
     return symbols[labelValue];
   }
+
+  void initTables()
+  {
+    symbols["R0"] = 0;
+    symbols["R1"] = 1;
+    symbols["R2"] = 2;
+    symbols["R3"] = 3;
+    symbols["R4"] = 4;
+    symbols["R5"] = 5;
+    symbols["R6"] = 6;
+    symbols["R7"] = 7;
+    symbols["R8"] = 8;
+    symbols["R9"] = 9;
+    symbols["R10"] = 10;
+    symbols["R11"] = 11;
+    symbols["R12"] = 12;
+    symbols["R13"] = 13;
+    symbols["R14"] = 14;
+    symbols["R15"] = 15;
+
+    symbols["SP"] = 0;
+    symbols["LCL"] = 1;
+    symbols["ARG"] = 2;
+    symbols["THIS"] = 3;
+    symbols["THAT"] = 4;
+    symbols["LCL"] = 1;
+
+    symbols["SCREEN"] = 16384;
+    symbols["KBD"] = 24576;
+  };
 };
 
 #endif
