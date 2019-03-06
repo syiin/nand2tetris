@@ -9,7 +9,7 @@ Project:
 - [x] 4 &nbsp;&nbsp;&nbsp; Write basic programs with Hack assembly language and CPU emulator (ie. make a screen fill upon keyboard press and multiply 2 numbers stored in memory) 
 - [x] 5 &nbsp;&nbsp;&nbsp; Built and tested a CPU, then tied the CPU to Memory chips to create a computer then test on some Hack assembly language programs 
 - [x] 6 &nbsp;&nbsp;&nbsp; Wrote an assembler in C++ that converts a .asm assembly language file to .hack binary  
-- [ ] 7
+- [x] 7 &nbsp;&nbsp;&nbsp; Wrote a VM translator in C++ that converts Jack VM language into .hack assembly language
 - [ ] 8
 - [ ] 9
 - [ ] 10
