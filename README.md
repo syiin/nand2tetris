@@ -3,7 +3,7 @@
 My progress through the nand2tetris course - a lot of fun! Would recommend anybody who needs a refresher on lower level concepts. Progress so far:
 
 Project: 
-- [x] 1 \t Built basic logic gates using primitive NAND gate using HDL hardware simulator langage  
+- [x] 1 &nbsp;&nbsp;&nbsp; Built basic logic gates using primitive NAND gate using HDL hardware simulator langage  
 - [x] 2 Used these basic logic gates to construct ALU, Half Adder, Full Adder, Incrementer...etc
 - [x] 3 Using FlipFlops gates and other basic logic gates, construct RAM chips and a Program Counter
 - [x] 4 Write basic programs with Hack assembly language and CPU emulator (ie. make a screen fill upon keyboard press and multiply 2 numbers stored in memory) 
