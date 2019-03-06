@@ -60,13 +60,13 @@ public:
     }
   }
 
-  std::string advance()
+  void advance()
   {
     if (hasMoreCommands() == 1)
     {
       line = line + 1;
     }
-  }
+  };
 
   std::string commandType()
   {
