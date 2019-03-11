@@ -35,9 +35,6 @@ D=M
 A=M
 M=D
 
-@SP
-M=M-1
-
 @3
 D=A
 @16
@@ -53,9 +50,6 @@ D=M
 A=M
 M=D
 
-@SP
-M=M-1
-
 @1
 D=A
 @16
@@ -70,9 +64,6 @@ D=M
 @R13
 A=M
 M=D
-
-@SP
-M=M-1
 
 @3
 D=A
@@ -102,12 +93,16 @@ M=D
 @SP
 M=M+1
 @SP
-A=M-1
+M=M-1
+A=M
 D=M
-A=A-1
-D=D-M
+
 @SP
 M=M-1
+A=M
+D=M-D
+@SP
+M=M+1
 A=M-1
 M=D
 
@@ -125,14 +120,19 @@ M=D
 @SP
 M=M+1
 @SP
-A=M-1
+M=M-1
+A=M
 D=M
-A=A-1
-D=D+M
+
 @SP
 M=M-1
+A=M
+D=M+D
+@SP
+M=M+1
 A=M-1
 M=D
+
 (INFINITE_LOOP)
 @INFINITE_LOOP
 0;JMP
