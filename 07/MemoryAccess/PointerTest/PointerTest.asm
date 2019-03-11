@@ -8,20 +8,19 @@ M=D
 
 @0
 D=A
-@pointer
-D=D+A
+@3
+A=M
+D=D+M
 
 @R13
 M=D
 @SP
-A=M-1
+M=M-1
+A=M
 D=M
 @R13
 A=M
 M=D
-
-@SP
-M=M-1
 
 @3040
 D=A
@@ -32,20 +31,19 @@ M=D
 
 @1
 D=A
-@pointer
-D=D+A
+@3
+A=M
+D=D+M
 
 @R13
 M=D
 @SP
-A=M-1
+M=M-1
+A=M
 D=M
 @R13
 A=M
 M=D
-
-@SP
-M=M-1
 
 @32
 D=A
@@ -56,20 +54,19 @@ M=D
 
 @2
 D=A
-@this
-D=D+A
+@THIS
+A=M
+D=D+M
 
 @R13
 M=D
 @SP
-A=M-1
+M=M-1
+A=M
 D=M
 @R13
 A=M
 M=D
-
-@SP
-M=M-1
 
 @46
 D=A
@@ -80,25 +77,25 @@ M=D
 
 @6
 D=A
-@that
-D=D+A
+@THAT
+A=M
+D=D+M
 
 @R13
 M=D
 @SP
-A=M-1
+M=M-1
+A=M
 D=M
 @R13
 A=M
 M=D
 
-@SP
-M=M-1
-
 @0
 D=A
-@pointer
-D=D+A
+@3
+A=M
+D=D+M
 
 A=D
 D=M
@@ -111,8 +108,9 @@ M=M+1
 
 @1
 D=A
-@pointer
-D=D+A
+@3
+A=M
+D=D+M
 
 A=D
 D=M
@@ -123,19 +121,24 @@ M=D
 @SP
 M=M+1
 @SP
-A=M-1
+M=M-1
+A=M
 D=M
-A=A-1
-D=D+M
+
 @SP
 M=M-1
+A=M
+D=M+D
+@SP
+M=M+1
 A=M-1
 M=D
 
 @2
 D=A
-@this
-D=D+A
+@THIS
+A=M
+D=D+M
 
 A=D
 D=M
@@ -146,19 +149,24 @@ M=D
 @SP
 M=M+1
 @SP
-A=M-1
+M=M-1
+A=M
 D=M
-A=A-1
-D=D-M
+
 @SP
 M=M-1
+A=M
+D=M-D
+@SP
+M=M+1
 A=M-1
 M=D
 
 @6
 D=A
-@that
-D=D+A
+@THAT
+A=M
+D=D+M
 
 A=D
 D=M
@@ -169,14 +177,15 @@ M=D
 @SP
 M=M+1
 @SP
-A=M-1
+M=M-1
+A=M
 D=M
-A=A-1
-D=D+M
+
 @SP
 M=M-1
+A=M
+D=M+D
+@SP
+M=M+1
 A=M-1
 M=D
-(INFINITE_LOOP)
-@INFINITE_LOOP
-0;JMP

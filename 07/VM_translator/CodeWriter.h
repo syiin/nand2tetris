@@ -40,15 +40,15 @@ public:
       myfile << "\n@R13\nM=D\n";
       myfile << popStackToD();
       myfile << "@R13\nA=M\nM=D\n";
-      myfile << decrementStackPointer();
+
       return popSegToD(index, segment) + "\n@R13\nM=D\n@SP\nA=M-1\nD=M\n@R13\nA=M\nM=D\n" + decrementStackPointer();
     }
     else if (theCommand == "C_PUSH")
     {
       if (segment == "constant")
       {
-        myfile << "\n@" + std::to_string(index) + "\nD=A\n@SP\nM=M+1\nA=M-1\nM=D\n";
-        return "\n@" + std::to_string(index) + "\nD=A\n@SP\nM=M+1\nA=M-1\nM=D\n";
+        myfile << "\n@" + std::to_string(index) + "\nD=A\n" + pushDToStack();
+        return "\n@" + std::to_string(index) + "\nD=A\n" + pushDToStack();
       }
       else
       {
@@ -63,9 +63,14 @@ public:
     return "@SP\nM=M-1\nA=M\nD=M\n";
   };
 
+  std::string pushDToStack()
+  {
+    return "@SP\nM=M+1\nA=M-1\nM=D\n";
+  }
+
   std::string popSegToD(int idx, std::string segment)
   {
-    return "\n@" + std::to_string(idx) + "\nD=A\n@" + memNameTable[segment] + "\nD=D+A\n";
+    return "\n@" + std::to_string(idx) + "\nD=A\n@" + memNameTable[segment] + "\nA=M\nD=D+M\n";
   }
 
   std::string decrementStackPointer()
@@ -80,27 +85,30 @@ public:
 
   void close()
   {
-    myfile << "(INFINITE_LOOP)\n@INFINITE_LOOP\n0;JMP\n";
+    myfile << "\n(INFINITE_LOOP)\n@INFINITE_LOOP\n0;JMP\n";
     myfile.close();
   }
 
   void initTables()
   {
-    std::string decrementSP = "@SP\nM=M-1\nA=M-1\nM=D\n";
-    arithTable["add"] = "@SP\nA=M-1\nD=M\nA=A-1\nD=D+M\n" + decrementSP;
-    arithTable["sub"] = "@SP\nA=M-1\nD=M\nA=A-1\nD=D-M\n" + decrementSP;
+    arithTable["add"] = popStackToD() + "\n@SP\nM=M-1\nA=M\nD=M+D\n" + pushDToStack();
+    arithTable["sub"] = popStackToD() + "\n@SP\nM=M-1\nA=M\nD=M-D\n" + pushDToStack();
     arithTable["neg"] = "@SP\nA=M-1\nM=-M\n";
 
-    std::string failCase = "@SP\nA=M-1\nA=A-1\nM=0\n@CONTINUE\n0;JMP\n";
-    std::string successCase = "(SUCCESS)\n@SP\nA=M-1\nA=A-1\nM=1\n";
+    std::string decrementSP = "@SP\nM=M-1\nA=M-1\nM=D\n";
+    std::string failCase = "@SP\nA=A-1\nM=-1\n@CONTINUE\n0;JMP\n";
+    std::string successCase = "(SUCCESS)\n@SP\nA=A-1\nM=1\n";
 
-    arithTable["eq"] = "@SP\nA=M-1\nD=M\nA=A-1\nD=M-D\n@SUCCESS\nD; JEQ\n" + failCase + successCase + "(CONTINUE)\n" + decrementSP;
-    arithTable["gt"] = "@SP\nA=M-1\nD=M\nA=A-1\nD=M-D\n@SUCCESS\nD; JGT\n" + failCase + successCase + "(CONTINUE)\n" + decrementSP;
+    arithTable["eq"] = popStackToD() + "@SP\nA=A-1\n@SUCCESS\nM-D; JEQ\n" + failCase;
+
+    arithTable["eq"] = "@SP\nA=M-1\nD=M\nA=A-1\nD=M-D\n@SUCCESS\nD; JEQ\n" + failCase + successCase + "(CONTINUE)\n";
+    arithTable["gt"] = "@SP\nA=M-1\nD=M\nA=A-1\nD=M-D\n@SUCCESS\nD; JGT\n" + failCase + successCase + "(CONTINUE)\n";
 
     arithTable["lt"] = "@SP\nA=M-1\nD=M\nA=A-1\nD=D-M\nD; JLT\n";
 
-    arithTable["and"] = "@SP\nA=M-1\nD=M\nA=A-1\nD=D|M\n" + decrementSP;
-    arithTable["or"] = "@SP\nA=M-1\nD=M\nA=A-1\nD=D&M\n" + decrementSP;
+    arithTable["and"] = popStackToD() + "\n@SP\nA=M-1\nD=D&M\nM=D\n";
+    arithTable["or"] = popStackToD() + "\n@SP\nA=M-1\nD=D|M\nM=D\n";
+
     arithTable["not"] = "@SP\nA=M-1\nA=A-1\nD=!M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n";
 
     memNameTable["local"] = "LCL";
