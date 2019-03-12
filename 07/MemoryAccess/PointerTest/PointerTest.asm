@@ -9,8 +9,7 @@ M=D
 @0
 D=A
 @3
-A=M
-D=D+M
+D=D+A
 
 @R13
 M=D
@@ -32,8 +31,7 @@ M=D
 @1
 D=A
 @3
-A=M
-D=D+M
+D=D+A
 
 @R13
 M=D
@@ -54,9 +52,9 @@ M=D
 
 @2
 D=A
-@THIS
-A=M
-D=D+M
+
+@3
+D=M+D
 
 @R13
 M=D
@@ -77,9 +75,9 @@ M=D
 
 @6
 D=A
-@THAT
-A=M
-D=D+M
+
+@4
+D=M+D
 
 @R13
 M=D
@@ -94,8 +92,7 @@ M=D
 @0
 D=A
 @3
-A=M
-D=D+M
+D=D+A
 
 A=D
 D=M
@@ -109,8 +106,7 @@ M=M+1
 @1
 D=A
 @3
-A=M
-D=D+M
+D=D+A
 
 A=D
 D=M
@@ -136,8 +132,7 @@ M=D
 
 @2
 D=A
-@THIS
-A=M
+@3
 D=D+M
 
 A=D
@@ -164,8 +159,7 @@ M=D
 
 @6
 D=A
-@THAT
-A=M
+@4
 D=D+M
 
 A=D
