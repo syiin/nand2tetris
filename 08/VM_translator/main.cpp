@@ -51,6 +51,10 @@ int main(int argc, char *argv[])
     else if (myParser.commandType() == "C_RETURN")
     {
       myWriter.writeReturn();
+    }
+    else if (myParser.commandType() == "C_CALL")
+    {
+      myWriter.writeCall(myParser.arg1(), std::stoi(myParser.arg2()));
     };
     myParser.advance();
   };

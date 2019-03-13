@@ -6,20 +6,42 @@
 #include <vector>
 #include <fstream>
 #include <algorithm>
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+//REMEMBER, NEED TO COMPILE WITH: g++ main.cpp -lstdc++fs
 
 class Parser
 {
 private:
   int line;
   std::vector<std::string> tokens;
+  std::vector<std::string> vmFiles;
   std::set<std::string> arithOps;
 
 public:
-  Parser(std::string inputFile)
+  Parser(std::string inputString)
   {
     line = 0;
-    loadTokens(inputFile);
     initTables();
+
+    if (inputString.find('.') == std::string::npos)
+    {
+      loadDir(inputString);
+    }
+    else
+    {
+      loadTokens(inputString);
+    }
+  }
+
+  void loadDir(std::string inputDir)
+  {
+    for (const auto &entry : fs::directory_iterator(inputFile))
+    {
+      vmFiles.push_back(entry.path());
+
+      std::cout << entry.path() << std::endl;
+    }
   }
 
   std::string arg1()
@@ -48,9 +70,16 @@ public:
 
   std::string arg2()
   {
-    if (commandType() == "C_PUSH" || commandType() == "C_POP" || commandType() == "C_FUNCTION")
+    if (commandType() == "C_PUSH" || commandType() == "C_POP")
     {
       int start = getNumIndex(tokens[line]);
+      int end = tokens[line].find('\0');
+      return removeSpaces(tokens[line].substr(start, end));
+    }
+    else if (commandType() == "C_FUNCTION" || commandType() == "C_CALL")
+    {
+      int start = get2ndCharIdx(' ', tokens[line]);
+      // int start = tokens[line].find_last_of(' ');
       int end = tokens[line].find('\0');
       return removeSpaces(tokens[line].substr(start, end));
     }
@@ -153,6 +182,7 @@ public:
     }
   }
 
+  //MISC HELPER FUNCTIONS
   void showTokens()
   {
     std::cout << "=======================================" << std::endl;
@@ -186,6 +216,26 @@ public:
         break;
     }
     return i;
+  }
+
+  int get2ndCharIdx(char c, std ::string theString)
+  {
+    int idx = 0;
+    for (int i = 0; i < theString.length(); i++)
+    {
+      if (theString[i] == c)
+      {
+        idx = i;
+      }
+    }
+
+    for (int i = idx; i < theString.length(); i++)
+    {
+      if (theString[i] == c)
+      {
+        return idx;
+      }
+    }
   }
 
   void initTables()
