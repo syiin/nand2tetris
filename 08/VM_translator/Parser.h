@@ -28,6 +28,18 @@ public:
     {
       return removeSpaces(tokens[line]);
     }
+    else if (commandType() == "C_LABEL")
+    {
+      int start = tokens[line].find(' ');
+      int end = tokens[line].find('\0');
+      return removeSpaces(tokens[line].substr(start, end));
+    }
+    else if (commandType() == "C_IF")
+    {
+      int start = tokens[line].find(' ');
+      int end = tokens[line].find('\0');
+      return removeSpaces(tokens[line].substr(start, end));
+    }
     else
     {
       return removeSpaces(getStrBtwnStr(tokens[line], " ", " "));
@@ -36,16 +48,12 @@ public:
 
   std::string arg2()
   {
-    if (commandType() == "C_PUSH" || commandType() == "C_POP" || commandType() == "C_CALL")
+    if (commandType() == "C_PUSH" || commandType() == "C_POP")
     {
-      int start = tokens[line].find_last_of(' ');
+      int start = getNumIndex(tokens[line]);
       int end = tokens[line].find('\0');
       return removeSpaces(tokens[line].substr(start, end));
     }
-    else
-    {
-      return "";
-    };
   }
 
   int hasMoreCommands()
@@ -82,10 +90,31 @@ public:
     {
       return "C_POP";
     }
-    else
+    else if (tokens[line].substr(0, 5) == "label")
     {
-      return "NOT ARITH";
+      return "C_LABEL";
     }
+    else if (tokens[line].substr(0, 4) == "goto")
+    {
+      return "C_GOTO";
+    }
+    else if (tokens[line].substr(0, 7) == "if-goto")
+    {
+      return "C_IF";
+    }
+    else if (tokens[line].substr(0, 8) == "function")
+    {
+      return "C_FUNCTION";
+    }
+    else if (tokens[line].substr(0, 6) == "return")
+    {
+      return "C_RETURN";
+    }
+    else if (tokens[line].substr(0, 4) == "call")
+    {
+      return "C_CALL";
+    }
+    return "UNKNOWN COMMAND";
   }
 
   void loadTokens(std::string fileName)
@@ -146,6 +175,17 @@ public:
 
     return s.substr(endPosOfSecondDelim,
                     lastDelimPos - endPosOfSecondDelim);
+  }
+
+  int getNumIndex(std::string str)
+  {
+    int i = 0;
+    for (; i < str.length(); i++)
+    {
+      if (isdigit(str[i]))
+        break;
+    }
+    return i;
   }
 
   void initTables()

@@ -23,15 +23,13 @@ public:
     initTables();
   };
 
-  std::string writeArithmetic(std::string theCommand)
+  void writeArithmetic(std::string theCommand)
   {
     myfile << makeLogicString(theCommand);
-    return makeLogicString(theCommand);
   };
 
-  std::string writePushPop(std::string theCommand, std::string segment, int index)
+  void writePushPop(std::string theCommand, std::string segment, int index)
   {
-    std::string outputString = "";
     if (theCommand == "C_POP")
     {
       myfile << popSegToD(index, segment)
@@ -55,6 +53,18 @@ public:
       }
     }
   };
+
+  void writeLabel(std::string label)
+  {
+    myfile << "(" << label << ")";
+  }
+
+  void writeIf(std::string label)
+  {
+    myfile << popStackToD()
+           << "@" + label + "\n"
+           << "D; JNE\n";
+  }
 
   std::string makeLogicString(std::string theCommand)
   {
