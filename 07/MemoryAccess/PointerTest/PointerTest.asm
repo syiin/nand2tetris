@@ -52,9 +52,8 @@ M=D
 
 @2
 D=A
-
 @3
-D=M+D
+D=D+M
 
 @R13
 M=D
@@ -75,9 +74,8 @@ M=D
 
 @6
 D=A
-
 @4
-D=M+D
+D=D+M
 
 @R13
 M=D
@@ -183,7 +181,3 @@ D=M+D
 M=M+1
 A=M-1
 M=D
-
-(INFINITE_LOOP)
-@INFINITE_LOOP
-0;JMP

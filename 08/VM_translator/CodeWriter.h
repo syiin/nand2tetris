@@ -66,6 +66,12 @@ public:
            << "D; JNE\n";
   }
 
+  void writeGoto(std::string label)
+  {
+    myfile << "@" + label + "\n"
+           << "0; JMP\n";
+  }
+
   std::string makeLogicString(std::string theCommand)
   {
     lineIdx++;
@@ -133,11 +139,16 @@ public:
       return "\n@" + std::to_string(idx) + "\nD=A\n@" +
              memNameTable["pointer_that"] + "\nD=D+M\n";
     }
-    else if (segment == "static")
+    else if (segment == "static" || segment == "pointer")
     {
       return "\n@" + std::to_string(idx) + "\nD=A\n@" +
              memNameTable[segment] + "\nD=D+A\n";
     }
+    // else if (segment == "pointer")
+    // {
+    //   return "\n@" + std::to_string(idx) + "\nD=A\n@" +
+    //          memNameTable[segment] + "\nD=D+A\n";
+    // }
 
     return "\n@" + std::to_string(idx) + "\nD=A\n@" +
            memNameTable[segment] + "\nD=D+M\n";
