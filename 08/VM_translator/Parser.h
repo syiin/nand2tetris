@@ -6,6 +6,7 @@
 #include <vector>
 #include <fstream>
 #include <algorithm>
+#include <ctype.h>
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 //REMEMBER, NEED TO COMPILE WITH: g++ main.cpp -lstdc++fs
@@ -15,34 +16,32 @@ class Parser
 private:
   int line;
   std::vector<std::string> tokens;
-  std::vector<std::string> vmFiles;
   std::set<std::string> arithOps;
 
 public:
-  Parser(std::string inputString)
+  Parser()
   {
     line = 0;
     initTables();
-
-    if (inputString.find('.') == std::string::npos)
-    {
-      loadDir(inputString);
-    }
-    else
-    {
-      loadTokens(inputString);
-    }
   }
 
-  void loadDir(std::string inputDir)
+  void loadTokens(std::string fileName)
   {
-    for (const auto &entry : fs::directory_iterator(inputFile))
+    tokens.clear();
+    line = 0;
+    std::ifstream input(fileName);
+    for (std::string line; getline(input, line);)
     {
-      vmFiles.push_back(entry.path());
-
-      std::cout << entry.path() << std::endl;
-    }
-  }
+      //check for comments & white space
+      if (line[0] != '/' && line[1] != '/' && line.find_first_not_of("\t\n\v\f\r") != std::string::npos)
+      {
+        //remove comments
+        line = line.substr(0, line.find("/", 0));
+        //if not a comment or white space, add to array of tokens
+        tokens.push_back(line);
+      }
+    };
+  };
 
   std::string arg1()
   {
@@ -78,11 +77,13 @@ public:
     }
     else if (commandType() == "C_FUNCTION" || commandType() == "C_CALL")
     {
-      int start = get2ndCharIdx(' ', tokens[line]);
-      // int start = tokens[line].find_last_of(' ');
+      int start = find_Nth(tokens[line], 2, " ");
       int end = tokens[line].find('\0');
+
       return removeSpaces(tokens[line].substr(start, end));
     }
+
+    return "";
   }
 
   int hasMoreCommands()
@@ -146,22 +147,6 @@ public:
     return "UNKNOWN COMMAND";
   }
 
-  void loadTokens(std::string fileName)
-  {
-    std::ifstream input(fileName);
-    for (std::string line; getline(input, line);)
-    {
-      //check for comments & white space
-      if (line[0] != '/' && line[1] != '/' && line.find_first_not_of("\t\n\v\f\r") != std::string::npos)
-      {
-        //remove comments
-        line = line.substr(0, line.find("/", 0));
-        //if not a comment or white space, add to array of tokens
-        tokens.push_back(line);
-      }
-    };
-  };
-
   std::string removeSpaces(std::string str)
   {
     str.erase(remove(str.begin(), str.end(), '\r'), str.end());
@@ -218,24 +203,30 @@ public:
     return i;
   }
 
-  int get2ndCharIdx(char c, std ::string theString)
+  size_t find_Nth(
+      const std::string &str, // where to work
+      unsigned N,             // N'th ocurrence
+      const std::string &find // what to 'find'
+  )
   {
-    int idx = 0;
-    for (int i = 0; i < theString.length(); i++)
+    if (0 == N)
     {
-      if (theString[i] == c)
-      {
-        idx = i;
-      }
+      return std::string::npos;
     }
-
-    for (int i = idx; i < theString.length(); i++)
+    size_t pos = 0;
+    size_t from = 0;
+    unsigned i = 0;
+    while (i < N)
     {
-      if (theString[i] == c)
+      pos = str.find(find, from);
+      if (std::string::npos == pos)
       {
-        return idx;
+        break;
       }
+      from = pos + 1; // from = pos + find.size();
+      ++i;
     }
+    return pos;
   }
 
   void initTables()
@@ -253,3 +244,46 @@ public:
 };
 
 #endif
+
+/*
+
+void loadDir(std::string inputDir)
+  {
+    //find Sys.vm first
+    for (const auto &entry : fs::directory_iterator(inputDir))
+    {
+      std::string filePath = entry.path();
+      int start = filePath.find_last_of('/');
+      int end = filePath.find('\0');
+
+      std::string fileName = filePath.substr(start + 1, end);
+
+      if (fileName == "Sys.vm")
+      {
+        loadTokens(entry.path());
+      }
+    }
+
+    //find the rest
+    for (const auto &entry : fs::directory_iterator(inputDir))
+    {
+      std::string filePath = entry.path();
+
+      int vmFileNameStart = filePath.find_last_of('.');
+      int vmFileNameEnd = filePath.find('\0');
+
+      int start = filePath.find_last_of('/');
+      int end = filePath.find('\0');
+
+      std::string fileType = filePath.substr(vmFileNameStart, vmFileNameEnd);
+      std::string fileName = filePath.substr(start + 1, end);
+
+      if (fileType == ".vm" && fileName != "Sys.vm")
+      {
+        std::cout << fileName << std::endl;
+        loadTokens(entry.path());
+      };
+    }
+  }
+
+*/

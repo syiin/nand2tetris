@@ -11,6 +11,7 @@ class CodeWriter
 private:
   std::map<std::string, std::string> arithTable;
   std::map<std::string, std::string> memNameTable;
+  std::string currFile;
   std::string fileName;
   std::ofstream myfile;
   int lineIdx = 0;
@@ -22,7 +23,27 @@ public:
     fileName = outputName;
     myfile.open(fileName);
     initTables();
+    writeInit();
   };
+
+  void setFileName(std::string fileName)
+  {
+    currFile = fileName;
+  }
+
+  std::string getFileName()
+  {
+    return currFile;
+  }
+
+  void writeInit()
+  {
+    myfile << "@256\n"
+           << "D=A\n"
+           << "@SP\n"
+           << "M=D\n";
+    writeCall("Sys.init", 0);
+  }
 
   void writeArithmetic(std::string theCommand)
   {
@@ -240,16 +261,6 @@ public:
     return "@SP\nM=M+1\nA=M-1\nM=D\n";
   }
 
-  // std::string popStackToD()
-  // {
-  //   return decrementStackPointer() + "A=M\nD=M\n";
-  // };
-
-  // std::string pushDToStack()
-  // {
-  //   return "@SP\nA=M\nM=D\n" + incrementStackPointer();
-  // }
-
   std::string popSegToD(int idx, std::string segment)
   {
     if (segment == "this")
@@ -262,20 +273,19 @@ public:
       return "\n@" + std::to_string(idx) + "\nD=A\n@" +
              memNameTable["pointer_that"] + "\nD=D+M\n";
     }
-    else if (segment == "static" || segment == "pointer" || segment == "temp")
+    else if (segment == "pointer" || segment == "temp")
+    {
+      return "\n@" + std::to_string(idx) + "\nD=A\n@R" +
+             memNameTable[segment] + "\nD=D+A\n";
+    }
+    else if (segment == "static")
     {
       return "\n@" + std::to_string(idx) + "\nD=A\n@" +
-             memNameTable[segment] + "\nD=D+A\n";
+             currFile + "." + std::to_string(idx) + "\nD=D+A\nD=A\n";
     }
 
     return "\n@" + std::to_string(idx) + "\nD=A\n@" +
            memNameTable[segment] + "\nD=D+M\n";
-  }
-
-  std::string popStaticPointerToD(int idx, std::string segment)
-  {
-    return "\n@" + std::to_string(idx) + "\nD=A\n@" +
-           memNameTable[segment] + "\nD=D+A\n";
   }
 
   std::string decrementStackPointer()
@@ -308,7 +318,7 @@ public:
     memNameTable["pointer"] = "3";
     memNameTable["pointer_that"] = "4";
     memNameTable["temp"] = "5";
-    memNameTable["static"] = "16";
+    // memNameTable["static"] = "16";
   }
 };
 
