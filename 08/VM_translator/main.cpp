@@ -18,9 +18,9 @@ int main(int argc, char *argv[])
 
   while (myParser.hasMoreCommands())
   {
-    // std::cout << "C_Typ: \t" << myParser.commandType() << std::endl;
-    // std::cout << "Arg1: \t" << myParser.arg1() << std::endl;
-    // std::cout << "Arg2: \t" << myParser.arg2() << std::endl;
+    std::cout << "C_Typ: \t" << myParser.commandType() << std::endl;
+    std::cout << "Arg1: \t" << myParser.arg1() << std::endl;
+    std::cout << "Arg2: \t" << myParser.arg2() << std::endl;
 
     if (myParser.commandType() == "C_ARITHMETIC")
     {
@@ -44,6 +44,14 @@ int main(int argc, char *argv[])
     {
       myWriter.writeGoto(myParser.arg1());
     }
+    else if (myParser.commandType() == "C_FUNCTION")
+    {
+      myWriter.writeFunction(myParser.arg1(), std::stoi(myParser.arg2()));
+    }
+    else if (myParser.commandType() == "C_RETURN")
+    {
+      myWriter.writeReturn();
+    };
     myParser.advance();
   };
 }

@@ -32,10 +32,10 @@ public:
   {
     if (theCommand == "C_POP")
     {
-      myfile << popSegToD(index, segment)
-             << "\n@R13\nM=D\n"
-             << popStackToD()
-             << "@R13\nA=M\nM=D\n";
+      myfile << popSegToD(index, segment) // D = *(segment+i)
+             << "\n@R13\nM=D\n"           // R13 = D
+             << popStackToD()             // D = *(Stack)
+             << "@R13\nA=M\nM=D\n";       // *(R13) = D
     }
     else if (theCommand == "C_PUSH")
     {
@@ -47,9 +47,9 @@ public:
       }
       else
       {
-        myfile << popSegToD(index, segment)
-               << "\nA=D\nD=M\n@SP\nA=M\nM=D\n"
-               << incrementStackPointer();
+        myfile << popSegToD(index, segment)     // D = *(segment+i)
+               << "\nA=D\nD=M\n@SP\nA=M\nM=D\n" // *(Stack) = *(D)
+               << incrementStackPointer();      // Stack++
       }
     }
   };
@@ -71,6 +71,72 @@ public:
     myfile << "@" + label + "\n"
            << "0; JMP\n";
   }
+
+  void writeFunction(std::string functionName, int numVars)
+  {
+    myfile << "(" << functionName << ")\n";
+    for (int i = 0; i < numVars; i++)
+    {
+      myfile << "D=0\n";
+      myfile << pushDToStack();
+    }
+  }
+
+  void writeReturn()
+  {
+    //TEMP VARIABLES
+    std::string FRAME = "R13\n";
+    std::string RETURN = "R14\n";
+
+    //FRAME = LCL
+    myfile << "@LCL\n"
+           << "D=M\n"
+           << "@" + FRAME
+           << "M=D\n";
+
+    //RETURN = *(FRAME-5)
+    myfile << "@" + FRAME
+           << "D=M\n"
+           << "@5\n"
+           << "D=D-A\n"
+           << "A=D\n"
+           << "D=M\n"
+           << "@" + RETURN
+           << "M=D\n";
+
+    //*ARG = pop()
+    myfile << popStackToD()
+           << "@ARG\n"
+           << "A=M\n"
+           << "M=D\n";
+
+    //SP=ARG+1
+    myfile << "@ARG\n"
+           << "D=M\n"
+           << "@SP\n"
+           << "M=D+1\n";
+
+    //SAVE THAT, THIS, ARG, LCL OF CALLER
+    std::string addresses[4] = {"@THAT\n", "@THIS\n", "@ARG\n", "@LCL\n"};
+    int offset = 1;
+    for (int i = 0; i < 4; i++)
+    {
+      myfile << "@" + FRAME + "\n"
+             << "D=M\n"
+             << "@" + std::to_string(offset) + "\n"
+             << "D=D-A\n"
+             << "A=D\n"
+             << "D=M\n" //D = *(FRAME - offset)
+             << addresses[i]
+             << "M=D\n"; //ADDR = D
+      offset++;
+    }
+
+    //GOTO RETURN
+    myfile << "@" + RETURN
+           << "A=M\n"
+           << "0;JMP\n";
+  };
 
   std::string makeLogicString(std::string theCommand)
   {
@@ -144,11 +210,6 @@ public:
       return "\n@" + std::to_string(idx) + "\nD=A\n@" +
              memNameTable[segment] + "\nD=D+A\n";
     }
-    // else if (segment == "pointer")
-    // {
-    //   return "\n@" + std::to_string(idx) + "\nD=A\n@" +
-    //          memNameTable[segment] + "\nD=D+A\n";
-    // }
 
     return "\n@" + std::to_string(idx) + "\nD=A\n@" +
            memNameTable[segment] + "\nD=D+M\n";

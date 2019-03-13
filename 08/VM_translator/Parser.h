@@ -48,7 +48,7 @@ public:
 
   std::string arg2()
   {
-    if (commandType() == "C_PUSH" || commandType() == "C_POP")
+    if (commandType() == "C_PUSH" || commandType() == "C_POP" || commandType() == "C_FUNCTION")
     {
       int start = getNumIndex(tokens[line]);
       int end = tokens[line].find('\0');
