@@ -1,5 +1,5 @@
 
-@3030
+@0
 D=A
 @SP
 M=M+1
@@ -8,51 +8,7 @@ M=D
 
 @0
 D=A
-@3
-D=D+A
-
-@R13
-M=D
-@SP
-M=M-1
-A=M
-D=M
-@R13
-A=M
-M=D
-
-@3040
-D=A
-@SP
-M=M+1
-A=M-1
-M=D
-
-@1
-D=A
-@3
-D=D+A
-
-@R13
-M=D
-@SP
-M=M-1
-A=M
-D=M
-@R13
-A=M
-M=D
-
-@32
-D=A
-@SP
-M=M+1
-A=M-1
-M=D
-
-@2
-D=A
-@3
+@LCL
 D=D+M
 
 @R13
@@ -64,33 +20,11 @@ D=M
 @R13
 A=M
 M=D
-
-@46
-D=A
-@SP
-M=M+1
-A=M-1
-M=D
-
-@6
-D=A
-@4
-D=D+M
-
-@R13
-M=D
-@SP
-M=M-1
-A=M
-D=M
-@R13
-A=M
-M=D
-
+(LOOP_START)
 @0
 D=A
-@3
-D=D+A
+@ARG
+D=D+M
 
 A=D
 D=M
@@ -101,10 +35,10 @@ M=D
 @SP
 M=M+1
 
-@1
+@0
 D=A
-@3
-D=D+A
+@LCL
+D=D+M
 
 A=D
 D=M
@@ -128,9 +62,24 @@ M=M+1
 A=M-1
 M=D
 
-@2
+@0
 D=A
-@3
+@LCL
+D=D+M
+
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+
+@0
+D=A
+@ARG
 D=D+M
 
 A=D
@@ -141,6 +90,13 @@ M=D
 
 @SP
 M=M+1
+
+@1
+D=A
+@SP
+M=M+1
+A=M-1
+M=D
 @SP
 M=M-1
 A=M
@@ -155,9 +111,24 @@ M=M+1
 A=M-1
 M=D
 
-@6
+@0
 D=A
-@4
+@ARG
+D=D+M
+
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+
+@0
+D=A
+@ARG
 D=D+M
 
 A=D
@@ -172,12 +143,19 @@ M=M+1
 M=M-1
 A=M
 D=M
+@LOOP_START
+D; JNE
+
+@0
+D=A
+@LCL
+D=D+M
+
+A=D
+D=M
+@SP
+A=M
+M=D
 
 @SP
-M=M-1
-A=M
-D=M+D
-@SP
 M=M+1
-A=M-1
-M=D

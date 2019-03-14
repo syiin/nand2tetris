@@ -61,6 +61,8 @@
     "memory": "cpp",
     "mutex": "cpp",
     "ratio": "cpp",
-    "set": "cpp"
+    "set": "cpp",
+    "codecvt": "cpp",
+    "filesystem": "cpp"
   }
 }

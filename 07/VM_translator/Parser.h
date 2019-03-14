@@ -6,6 +6,7 @@
 #include <vector>
 #include <fstream>
 #include <algorithm>
+#include <filesystem>
 
 class Parser
 {
@@ -82,26 +83,53 @@ public:
     {
       return "C_POP";
     }
-    else
+    else if (tokens[line].substr(0, 5) == "label")
     {
-      return "NOT ARITH";
+      return "C_LABEL";
     }
+    else if (tokens[line].substr(0, 4) == "goto")
+    {
+      return "C_GOTO";
+    }
+    else if (tokens[line].substr(0, 7) == "if-goto")
+    {
+      return "C_IF";
+    }
+    else if (tokens[line].substr(0, 8) == "function")
+    {
+      return "C_FUNCTION";
+    }
+    else if (tokens[line].substr(0, 6) == "return")
+    {
+      return "C_RETURN";
+    }
+    else if (tokens[line].substr(0, 4) == "call")
+    {
+      return "C_CALL";
+    }
+    return "UNKNOWN COMMAND";
   }
 
   void loadTokens(std::string fileName)
   {
-    std::ifstream input(fileName);
-    for (std::string line; getline(input, line);)
+    namespace fs = std::filesystem;
+    for (const auto &entry : std::filesystem::directory_iterator(fileName))
     {
-      //check for comments & white space
-      if (line[0] != '/' && line[1] != '/' && line.find_first_not_of("\t\n\v\f\r") != std::string::npos)
-      {
-        //remove comments
-        line = line.substr(0, line.find("/", 0));
-        //if not a comment or white space, add to array of tokens
-        tokens.push_back(line);
-      }
-    };
+      std::cout << entry.path() << std::endl;
+    }
+
+    // std::ifstream input(fileName);
+    // for (std::string line; getline(input, line);)
+    // {
+    //   //check for comments & white space
+    //   if (line[0] != '/' && line[1] != '/' && line.find_first_not_of("\t\n\v\f\r") != std::string::npos)
+    //   {
+    //     //remove comments
+    //     line = line.substr(0, line.find("/", 0));
+    //     //if not a comment or white space, add to array of tokens
+    //     tokens.push_back(line);
+    //   }
+    // };
   };
 
   std::string removeSpaces(std::string str)

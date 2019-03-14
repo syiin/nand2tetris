@@ -10,7 +10,7 @@ Project:
 - [x] 5 &nbsp;&nbsp;&nbsp; Built and tested a CPU, then tied the CPU to Memory chips to create a computer then test on some Hack assembly language programs 
 - [x] 6 &nbsp;&nbsp;&nbsp; Wrote an assembler in C++ that converts a .asm assembly language file to .hack binary  
 - [x] 7 &nbsp;&nbsp;&nbsp; Wrote a VM translator in C++ that converts Jack VM language into .hack assembly language
-- [ ] 8
+- [x] 8 &nbsp;&nbsp;&nbsp; VM translator can now handle function declarations, function calls, function returns and bootstrap system initialisation as well as if and goto branching statements
 - [ ] 9
 - [ ] 10
 - [ ] 11
