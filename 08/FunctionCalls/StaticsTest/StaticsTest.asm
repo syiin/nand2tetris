@@ -289,11 +289,7 @@ M=D
 
 @SP
 M=M+1
-
-@0
-D=A
 @Class1.vm.0
-D=D+A
 D=A
 @R13
 M=D
@@ -317,11 +313,7 @@ M=D
 
 @SP
 M=M+1
-
-@1
-D=A
 @Class1.vm.1
-D=D+A
 D=A
 @R13
 M=D
@@ -404,11 +396,7 @@ A=M
 //ENDRETURN
 //Write: Class1.get
 (Class1.get)
-
-@0
-D=A
 @Class1.vm.0
-D=D+A
 D=A
 A=D
 D=M
@@ -418,11 +406,7 @@ M=D
 
 @SP
 M=M+1
-
-@1
-D=A
 @Class1.vm.1
-D=D+A
 D=A
 A=D
 D=M
@@ -523,11 +507,7 @@ M=D
 
 @SP
 M=M+1
-
-@0
-D=A
 @Class2.vm.0
-D=D+A
 D=A
 @R13
 M=D
@@ -551,11 +531,7 @@ M=D
 
 @SP
 M=M+1
-
-@1
-D=A
 @Class2.vm.1
-D=D+A
 D=A
 @R13
 M=D
@@ -638,11 +614,7 @@ A=M
 //ENDRETURN
 //Write: Class2.get
 (Class2.get)
-
-@0
-D=A
 @Class2.vm.0
-D=D+A
 D=A
 A=D
 D=M
@@ -652,11 +624,7 @@ M=D
 
 @SP
 M=M+1
-
-@1
-D=A
 @Class2.vm.1
-D=D+A
 D=A
 A=D
 D=M

@@ -11,167 +11,77 @@
 #include "CodeWriter.h"
 
 std::map<std::string, std::string> loadDir(std::string inputDir);
-void translate(Parser myParser, CodeWriter myWriter);
+void translateCode(Parser *myParser, CodeWriter *myWriter);
 
 int main(int argc, char *argv[])
 {
-  std::map<std::string, std::string> files;
-
+  std::map<std::string, std::string> files = loadDir(*(argv + 1));
   Parser myParser;
   CodeWriter myWriter(*(argv + 2));
 
-  files = loadDir(*(argv + 1));
-
   myParser.loadTokens(files["Sys.vm"]);
   myWriter.setFileName("Sys.vm");
+  translateCode(&myParser, &myWriter); //make sure Sys.vm is loaded and written first
 
-  while (myParser.hasMoreCommands())
-  {
-    std::cout << "C_Typ: \t" << myParser.commandType() << std::endl;
-    std::cout << "Arg1: \t" << myParser.arg1() << std::endl;
-    std::cout << "Arg2: \t" << myParser.arg2() << std::endl;
-
-    if (myParser.commandType() == "C_ARITHMETIC")
-    {
-      myWriter.writeArithmetic(myParser.arg1());
-    }
-    else if (myParser.commandType() == "C_PUSH" || myParser.commandType() == "C_POP")
-    {
-      myWriter.writePushPop(myParser.commandType(),
-                            myParser.arg1(),
-                            std::stoi(myParser.arg2()));
-    }
-    else if (myParser.commandType() == "C_LABEL")
-    {
-      myWriter.writeLabel(myParser.arg1());
-    }
-    else if (myParser.commandType() == "C_IF")
-    {
-      myWriter.writeIf(myParser.arg1());
-    }
-    else if (myParser.commandType() == "C_GOTO")
-    {
-      myWriter.writeGoto(myParser.arg1());
-    }
-    else if (myParser.commandType() == "C_FUNCTION")
-    {
-      myWriter.writeFunction(myParser.arg1(), std::stoi(myParser.arg2()));
-    }
-    else if (myParser.commandType() == "C_RETURN")
-    {
-      myWriter.writeReturn();
-    }
-    else if (myParser.commandType() == "C_CALL")
-    {
-      myWriter.writeCall(myParser.arg1(), std::stoi(myParser.arg2()));
-    };
-    myParser.advance();
-  };
-  myParser.showTokens();
-
-  files.erase("Sys.vm");
-
+  files.erase("Sys.vm"); //prepare to load the other files in the directory
   for (auto const &file : files)
   {
-    std::cout << "FIRST: " << file.first
-              << "SECOND: " << file.second
-              << std::endl;
-
     myParser.loadTokens(file.second);
     myWriter.setFileName(file.first);
-    while (myParser.hasMoreCommands())
-    {
-      std::cout << "C_Typ: \t" << myParser.commandType() << std::endl;
-      std::cout << "Arg1: \t" << myParser.arg1() << std::endl;
-      std::cout << "Arg2: \t" << myParser.arg2() << std::endl;
-
-      if (myParser.commandType() == "C_ARITHMETIC")
-      {
-        myWriter.writeArithmetic(myParser.arg1());
-      }
-      else if (myParser.commandType() == "C_PUSH" || myParser.commandType() == "C_POP")
-      {
-        myWriter.writePushPop(myParser.commandType(),
-                              myParser.arg1(),
-                              std::stoi(myParser.arg2()));
-      }
-      else if (myParser.commandType() == "C_LABEL")
-      {
-        myWriter.writeLabel(myParser.arg1());
-      }
-      else if (myParser.commandType() == "C_IF")
-      {
-        myWriter.writeIf(myParser.arg1());
-      }
-      else if (myParser.commandType() == "C_GOTO")
-      {
-        myWriter.writeGoto(myParser.arg1());
-      }
-      else if (myParser.commandType() == "C_FUNCTION")
-      {
-        myWriter.writeFunction(myParser.arg1(), std::stoi(myParser.arg2()));
-      }
-      else if (myParser.commandType() == "C_RETURN")
-      {
-        myWriter.writeReturn();
-      }
-      else if (myParser.commandType() == "C_CALL")
-      {
-        myWriter.writeCall(myParser.arg1(), std::stoi(myParser.arg2()));
-      };
-      myParser.advance();
-    };
+    translateCode(&myParser, &myWriter);
     myParser.showTokens();
   }
 }
 
-void translate(Parser myParser, CodeWriter myWriter)
+void translateCode(Parser *myParser, CodeWriter *myWriter)
+//Gets tokens line by line from the Parser and feeds it into the CodeWriter
 {
-  while (myParser.hasMoreCommands())
+  while (myParser->hasMoreCommands())
   {
-    std::cout << "C_Typ: \t" << myParser.commandType() << std::endl;
-    std::cout << "Arg1: \t" << myParser.arg1() << std::endl;
-    std::cout << "Arg2: \t" << myParser.arg2() << std::endl;
+    std::cout << "C_Typ: \t" << myParser->commandType() << std::endl;
+    std::cout << "Arg1: \t" << myParser->arg1() << std::endl;
+    std::cout << "Arg2: \t" << myParser->arg2() << std::endl;
 
-    if (myParser.commandType() == "C_ARITHMETIC")
+    if (myParser->commandType() == "C_ARITHMETIC")
     {
-      myWriter.writeArithmetic(myParser.arg1());
+      myWriter->writeArithmetic(myParser->arg1());
     }
-    else if (myParser.commandType() == "C_PUSH" || myParser.commandType() == "C_POP")
+    else if (myParser->commandType() == "C_PUSH" || myParser->commandType() == "C_POP")
     {
-      myWriter.writePushPop(myParser.commandType(),
-                            myParser.arg1(),
-                            std::stoi(myParser.arg2()));
+      myWriter->writePushPop(myParser->commandType(),
+                             myParser->arg1(),
+                             std::stoi(myParser->arg2()));
     }
-    else if (myParser.commandType() == "C_LABEL")
+    else if (myParser->commandType() == "C_LABEL")
     {
-      myWriter.writeLabel(myParser.arg1());
+      myWriter->writeLabel(myParser->arg1());
     }
-    else if (myParser.commandType() == "C_IF")
+    else if (myParser->commandType() == "C_IF")
     {
-      myWriter.writeIf(myParser.arg1());
+      myWriter->writeIf(myParser->arg1());
     }
-    else if (myParser.commandType() == "C_GOTO")
+    else if (myParser->commandType() == "C_GOTO")
     {
-      myWriter.writeGoto(myParser.arg1());
+      myWriter->writeGoto(myParser->arg1());
     }
-    else if (myParser.commandType() == "C_FUNCTION")
+    else if (myParser->commandType() == "C_FUNCTION")
     {
-      myWriter.writeFunction(myParser.arg1(), std::stoi(myParser.arg2()));
+      myWriter->writeFunction(myParser->arg1(), std::stoi(myParser->arg2()));
     }
-    else if (myParser.commandType() == "C_RETURN")
+    else if (myParser->commandType() == "C_RETURN")
     {
-      myWriter.writeReturn();
+      myWriter->writeReturn();
     }
-    else if (myParser.commandType() == "C_CALL")
+    else if (myParser->commandType() == "C_CALL")
     {
-      myWriter.writeCall(myParser.arg1(), std::stoi(myParser.arg2()));
+      myWriter->writeCall(myParser->arg1(), std::stoi(myParser->arg2()));
     };
-    myParser.advance();
+    myParser->advance();
   };
 }
 
 std::map<std::string, std::string> loadDir(std::string inputDir)
+//Takes in a directory string and returns a map where the key is filename and value is the address
 {
   std::map<std::string, std::string> fileMap;
 

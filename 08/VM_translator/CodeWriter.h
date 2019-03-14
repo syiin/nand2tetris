@@ -26,6 +26,8 @@ public:
     writeInit();
   };
 
+  /* FILE INITIALISATION & TERMINATION FUNCTIONS */
+
   void setFileName(std::string fileName)
   {
     currFile = fileName;
@@ -44,6 +46,25 @@ public:
            << "M=D\n";
     writeCall("Sys.init", 0);
   }
+
+  void close()
+  {
+    myfile << "\n(INFINITE_LOOP)\n@INFINITE_LOOP\n0;JMP\n";
+    myfile.close();
+  }
+
+  void initTables()
+  {
+    memNameTable["local"] = "LCL";
+    memNameTable["argument"] = "ARG";
+    memNameTable["this"] = "THIS";
+    memNameTable["that"] = "THAT";
+    memNameTable["pointer"] = "3";
+    memNameTable["pointer_that"] = "4";
+    memNameTable["temp"] = "5";
+  }
+
+  /* ASSEMBLY ARITHMETIC & LOGICAL FUNCTIONS */
 
   void writeArithmetic(std::string theCommand)
   {
@@ -93,6 +114,53 @@ public:
     myfile << "@" + label + "\n"
            << "0; JMP\n";
   }
+
+  std::string makeLogicString(std::string theCommand)
+  {
+    lineIdx++;
+    std::string lineString = "line" + std::to_string(lineIdx);
+    std::string failCase = "@SP\nA=M-1\nM=0\n@CONTINUE." + lineString + "\n0;JMP\n";
+    std::string successCase = "(SUCCESS." + lineString + ")\n@SP\nA=M-1\nM=-1\n";
+
+    if (theCommand == "add")
+    {
+      return popStackToD() + "@SP\nM=M-1\nA=M\nD=M+D\n" + pushDToStack();
+    }
+    else if (theCommand == "sub")
+    {
+      return popStackToD() + "@SP\nM=M-1\nA=M\nD=M-D\n" + pushDToStack();
+    }
+    else if (theCommand == "not")
+    {
+      return "@SP\nA=M-1\nM=!M\n";
+    }
+    else if (theCommand == "neg")
+    {
+      return "@SP\nA=M-1\nM=-M\n";
+    }
+    else if (theCommand == "eq")
+    {
+      return popStackToD() + "@SP\nA=M-1\nD=M-D\n@SUCCESS." + lineString + "\nD; JEQ\n" + failCase + successCase + "(CONTINUE." + lineString + ")\n";
+    }
+    else if (theCommand == "gt")
+    {
+      return popStackToD() + "@SP\nA=M-1\nD=M-D\n@SUCCESS." + lineString + "\nD; JGT\n" + failCase + successCase + "(CONTINUE." + lineString + ")\n";
+    }
+    else if (theCommand == "lt")
+    {
+      return popStackToD() + "@SP\nA=M-1\nD=M-D\n@SUCCESS." + lineString + "\nD; JLT\n" + failCase + successCase + "(CONTINUE." + lineString + ")\n";
+    }
+    else if (theCommand == "and")
+    {
+      return popStackToD() + "@SP\nA=M-1\nD=D&M\nM=D\n";
+    }
+    else if (theCommand == "or")
+    {
+      return popStackToD() + "@SP\nA=M-1\nD=D|M\nM=D\n";
+    };
+  }
+
+  /* ASSEMBLY FUNCTION WRITING FUNCTIONS */
 
   void writeFunction(std::string functionName, int numVars)
   {
@@ -206,50 +274,7 @@ public:
     myfile << "//EndCall" + functionName + "\n";
   }
 
-  std::string makeLogicString(std::string theCommand)
-  {
-    lineIdx++;
-    std::string lineString = "line" + std::to_string(lineIdx);
-    std::string failCase = "@SP\nA=M-1\nM=0\n@CONTINUE." + lineString + "\n0;JMP\n";
-    std::string successCase = "(SUCCESS." + lineString + ")\n@SP\nA=M-1\nM=-1\n";
-
-    if (theCommand == "add")
-    {
-      return popStackToD() + "@SP\nM=M-1\nA=M\nD=M+D\n" + pushDToStack();
-    }
-    else if (theCommand == "sub")
-    {
-      return popStackToD() + "@SP\nM=M-1\nA=M\nD=M-D\n" + pushDToStack();
-    }
-    else if (theCommand == "not")
-    {
-      return "@SP\nA=M-1\nM=!M\n";
-    }
-    else if (theCommand == "neg")
-    {
-      return "@SP\nA=M-1\nM=-M\n";
-    }
-    else if (theCommand == "eq")
-    {
-      return popStackToD() + "@SP\nA=M-1\nD=M-D\n@SUCCESS." + lineString + "\nD; JEQ\n" + failCase + successCase + "(CONTINUE." + lineString + ")\n";
-    }
-    else if (theCommand == "gt")
-    {
-      return popStackToD() + "@SP\nA=M-1\nD=M-D\n@SUCCESS." + lineString + "\nD; JGT\n" + failCase + successCase + "(CONTINUE." + lineString + ")\n";
-    }
-    else if (theCommand == "lt")
-    {
-      return popStackToD() + "@SP\nA=M-1\nD=M-D\n@SUCCESS." + lineString + "\nD; JLT\n" + failCase + successCase + "(CONTINUE." + lineString + ")\n";
-    }
-    else if (theCommand == "and")
-    {
-      return popStackToD() + "@SP\nA=M-1\nD=D&M\nM=D\n";
-    }
-    else if (theCommand == "or")
-    {
-      return popStackToD() + "@SP\nA=M-1\nD=D|M\nM=D\n";
-    };
-  }
+  /* MISC SHARED HELPER FUNCTIONS */
 
   std::string popStackToD()
   {
@@ -262,68 +287,44 @@ public:
   }
 
   std::string popSegToD(int idx, std::string segment)
+  //returns the correct value in D for any pop segment i depending on memory segment to be later consumed
   {
     if (segment == "this")
     {
+      //this & that are used to go to the addresses in pointer 0 & 1 to retrieve values
       return "\n@" + std::to_string(idx) + "\nD=A\n@" +
-             memNameTable["pointer"] + "\nD=D+M\n";
+             memNameTable["pointer"] + "\nD=D+M\n"; //D=*(pointer 0) + i
     }
     else if (segment == "that")
     {
       return "\n@" + std::to_string(idx) + "\nD=A\n@" +
-             memNameTable["pointer_that"] + "\nD=D+M\n";
+             memNameTable["pointer_that"] + "\nD=D+M\n"; //D=*(pointer 1) + i
     }
     else if (segment == "pointer" || segment == "temp")
+    //pointer & temp are accessed as fixed data locations. pointer sets locations that this & that access
     {
       return "\n@" + std::to_string(idx) + "\nD=A\n@R" +
-             memNameTable[segment] + "\nD=D+A\n";
+             memNameTable[segment] + "\nD=D+A\n"; // D=pointer + i
     }
     else if (segment == "static")
+    //static is used to store addresses to static variables inside RAM[16 - 255]
     {
-      return "\n@" + std::to_string(idx) + "\nD=A\n@" +
-             currFile + "." + std::to_string(idx) + "\nD=D+A\nD=A\n";
+      return "@" + currFile + "." + std::to_string(idx) + "\nD=A\n"; //D=(static.filename.i)
     }
 
     return "\n@" + std::to_string(idx) + "\nD=A\n@" +
-           memNameTable[segment] + "\nD=D+M\n";
+           memNameTable[segment] + "\nD=D+M\n"; //D=*(segment)+i
   }
 
   std::string decrementStackPointer()
   {
-    return "\n@SP\nM=M-1\n";
+    return "\n@SP\nM=M-1\n"; //SP--
   }
 
   std::string incrementStackPointer()
   {
-    return "\n@SP\nM=M+1\n";
-  }
-
-  std::string setAToStack()
-  {
-    return "\n@SP\nA=M\n";
-  }
-
-  void close()
-  {
-    myfile << "\n(INFINITE_LOOP)\n@INFINITE_LOOP\n0;JMP\n";
-    myfile.close();
-  }
-
-  void initTables()
-  {
-    memNameTable["local"] = "LCL";
-    memNameTable["argument"] = "ARG";
-    memNameTable["this"] = "THIS";
-    memNameTable["that"] = "THAT";
-    memNameTable["pointer"] = "3";
-    memNameTable["pointer_that"] = "4";
-    memNameTable["temp"] = "5";
-    // memNameTable["static"] = "16";
+    return "\n@SP\nM=M+1\n"; //SP++
   }
 };
 
 #endif
-
-/*
-
-*/

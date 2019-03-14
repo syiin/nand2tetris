@@ -79,10 +79,8 @@ public:
     {
       int start = find_Nth(tokens[line], 2, " ");
       int end = tokens[line].find('\0');
-
       return removeSpaces(tokens[line].substr(start, end));
     }
-
     return "";
   }
 
@@ -147,6 +145,32 @@ public:
     return "UNKNOWN COMMAND";
   }
 
+  void showTokens()
+  {
+    std::cout << "=======================================" << std::endl;
+    std::cout << "TOKENS" << std::endl;
+    std::cout << "=======================================" << std::endl;
+    for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it)
+    {
+      std::cout << *it << std::endl;
+    };
+    std::cout << "=======================================" << std::endl;
+  };
+
+  //MISC HELPER FUNCTIONS - largely to deal with strings
+
+  std::string getStrBtwnStr(const std::string &s,
+                            const std::string &startDelim,
+                            const std::string &stopDelim)
+  {
+    unsigned firstDelimPost = s.find(startDelim);
+    unsigned endPosOfSecondDelim = firstDelimPost + startDelim.length();
+    unsigned lastDelimPos = s.find_first_of(stopDelim, endPosOfSecondDelim);
+
+    return s.substr(endPosOfSecondDelim,
+                    lastDelimPos - endPosOfSecondDelim);
+  }
+
   std::string removeSpaces(std::string str)
   {
     str.erase(remove(str.begin(), str.end(), '\r'), str.end());
@@ -165,31 +189,6 @@ public:
     {
       return 0;
     }
-  }
-
-  //MISC HELPER FUNCTIONS
-  void showTokens()
-  {
-    std::cout << "=======================================" << std::endl;
-    std::cout << "TOKENS" << std::endl;
-    std::cout << "=======================================" << std::endl;
-    for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it)
-    {
-      std::cout << *it << std::endl;
-    };
-    std::cout << "=======================================" << std::endl;
-  };
-
-  std::string getStrBtwnStr(const std::string &s,
-                            const std::string &startDelim,
-                            const std::string &stopDelim)
-  {
-    unsigned firstDelimPost = s.find(startDelim);
-    unsigned endPosOfSecondDelim = firstDelimPost + startDelim.length();
-    unsigned lastDelimPos = s.find_first_of(stopDelim, endPosOfSecondDelim);
-
-    return s.substr(endPosOfSecondDelim,
-                    lastDelimPos - endPosOfSecondDelim);
   }
 
   int getNumIndex(std::string str)
@@ -230,6 +229,7 @@ public:
   }
 
   void initTables()
+  //Intialise a vector of arithmetic operations
   {
     arithOps.insert("add");
     arithOps.insert("sub");
@@ -244,46 +244,3 @@ public:
 };
 
 #endif
-
-/*
-
-void loadDir(std::string inputDir)
-  {
-    //find Sys.vm first
-    for (const auto &entry : fs::directory_iterator(inputDir))
-    {
-      std::string filePath = entry.path();
-      int start = filePath.find_last_of('/');
-      int end = filePath.find('\0');
-
-      std::string fileName = filePath.substr(start + 1, end);
-
-      if (fileName == "Sys.vm")
-      {
-        loadTokens(entry.path());
-      }
-    }
-
-    //find the rest
-    for (const auto &entry : fs::directory_iterator(inputDir))
-    {
-      std::string filePath = entry.path();
-
-      int vmFileNameStart = filePath.find_last_of('.');
-      int vmFileNameEnd = filePath.find('\0');
-
-      int start = filePath.find_last_of('/');
-      int end = filePath.find('\0');
-
-      std::string fileType = filePath.substr(vmFileNameStart, vmFileNameEnd);
-      std::string fileName = filePath.substr(start + 1, end);
-
-      if (fileType == ".vm" && fileName != "Sys.vm")
-      {
-        std::cout << fileName << std::endl;
-        loadTokens(entry.path());
-      };
-    }
-  }
-
-*/
