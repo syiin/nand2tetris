@@ -5,6 +5,7 @@
 using namespace std;
 int main(int argc, char *argv[])
 {
-  Tokenizer myTokenizer(*(argv + 2));
+  Tokenizer myTokenizer(*(argv + 1));
+  myTokenizer.printTokens();
   return 0;
 }
