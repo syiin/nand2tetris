@@ -1,0 +1,21 @@
+class DataObject{
+  field int size;
+  field int counter;
+  field Array dataArray;
+
+  constructor DataObject new(int size){
+    let size = size;
+    let counter = 0;
+    let dataArray = Array.new(size);
+  }
+
+  method void dispose(){
+    do Memory.deAlloc(this);
+    return;
+  }
+
+  method void addData(int data){
+    dataArray[counter] = data;
+    counter = counter + 1;
+  }
+}
