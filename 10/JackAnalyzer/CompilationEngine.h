@@ -7,21 +7,55 @@
 #include <sstream>
 #include <experimental/filesystem>
 
+#include "Tokenizer.h"
+
 using namespace std;
-// namespace fs = std::filesystem;
 
 class CompilationEngine
 {
 private:
   ofstream outputFile;
-  map<string, string> inputDir;
+  Tokenizer myTokenizer;
 
 public:
-  CompilationEngine(string inputDirName, string outputFileName)
+  void loadEngine(string inputFileName)
   {
-    inputDir = loadDir(inputDirName);
-    outputFile.open(outputFileName);
-    compileClass();
+    myTokenizer.loadTokens(inputFileName);
+    // myTokenizer.printTokens();
+    translateCode();
+  }
+
+  void translateCode()
+  {
+    cout << "Translating" << endl;
+    while (myTokenizer.hasMoreTokens())
+    {
+      if (myTokenizer.tokenType() == "KEYWORD")
+      {
+        cout << "KEYWORD" << endl;
+      }
+      else if (myTokenizer.tokenType() == "SYMBOL")
+      {
+        cout << "SYMBOL" << endl;
+      }
+      else if (myTokenizer.tokenType() == "STRING_CONST")
+      {
+        cout << "STRING_CONST" << endl;
+      }
+      else if (myTokenizer.tokenType() == "INT_CONST")
+      {
+        cout << "INT_CONST" << endl;
+      }
+      else if (myTokenizer.tokenType() == "IDENTIFIER")
+      {
+        cout << "IDENTIFIER" << endl;
+      }
+      else
+      {
+        cout << "UNKNOWN WORD" << endl;
+      }
+      myTokenizer.advance();
+    }
   }
 
   void compileClass()
@@ -34,51 +68,6 @@ public:
 
   void compileSubroutineDec()
   {
-  }
-
-  map<string, string> loadDir(string inputDirName)
-  {
-    map<string, string> fileMap;
-    if (isDir(inputDirName))
-    {
-      fileMap = handleDir(inputDirName);
-    }
-    else
-    {
-      fileMap[getFileName(inputDirName)] = inputDirName;
-    }
-    return fileMap;
-  }
-
-  map<string, string> handleDir(string inputDirName)
-  {
-    map<string, string> outputMap;
-    for (const auto &entry : experimental::filesystem::directory_iterator(inputDirName))
-    {
-      string filePath = entry.path();
-      string fileName = getFileName(filePath);
-
-      if (isDir(filePath))
-      {
-        outputMap[fileName] = filePath;
-      };
-    }
-    return outputMap;
-  }
-
-  string getFileName(string fileString)
-  {
-    int start = fileString.find_last_of('/');
-    int end = fileString.find('\0');
-    return fileString.substr(start + 1, end);
-  }
-
-  bool isDir(string inputDirName)
-  {
-    int jackFileNameStart = inputDirName.find_last_of('.');
-    int jackFileNameEnd = inputDirName.find('\0');
-    string fileType = inputDirName.substr(jackFileNameStart, jackFileNameEnd);
-    return (fileType == ".jack");
   }
 };
 

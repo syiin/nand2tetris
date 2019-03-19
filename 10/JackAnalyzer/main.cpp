@@ -1,15 +1,12 @@
 #include <iostream>
 #include <string>
-#include "Tokenizer.h"
-#include "CompilationEngine.h"
+#include "Analyzer.h"
 
 using namespace std;
 int main(int argc, char *argv[])
 {
-  Tokenizer myTokenizer(*(argv + 1));
-  CompilationEngine myCompilationEng(*(argv + 1), "output.xml");
-
-  myTokenizer.printTokens();
+  Analyzer myAnalyzer(*(argv + 1));
+  myAnalyzer.createXML();
   return 0;
 }
 

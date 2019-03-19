@@ -18,7 +18,6 @@ private:
   vector<char> charTokens;
   vector<string> stringTokens;
 
-  vector<string> TOKEN_TYPES = {"KEYWORD", "SYMBOL", "IDENTIFIER", "INT_CONST", "STRING_CONST"};
   vector<string> TOKEN_KEYWORDS = {"CLASS", "METHOD", "FUNCTION", "CONSTRUCTOR", "INT",
                                    "BOOLEAN", "CHAR", "VOID", "VAR", "STATIC", "FIELD",
                                    "LET", "DO", "IF", "ELSE", "WHILE", "RETURN", "TRUE",
@@ -27,11 +26,6 @@ private:
                             "/", "&", "|", "~", "<", ">"};
 
 public:
-  Tokenizer(string fileName)
-  {
-    loadTokens(fileName);
-  }
-
   bool hasMoreTokens()
   {
     return (tokenCount == stringTokens.size());
