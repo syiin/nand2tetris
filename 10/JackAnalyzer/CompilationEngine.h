@@ -24,7 +24,7 @@ public:
     myTokenizer.loadTokens(inputFileName);
     outputFile.open(outputFileName + ".xml");
     compileClass();
-    myTokenizer.printTokens();
+    // myTokenizer.printTokens();
   }
 
   void compileClass()

@@ -132,9 +132,8 @@ public:
     ifstream input(fileName);
     for (string line; getline(input, line);)
     {
-      string tokenInput = line.substr(0, line.find("//", 0));
-      tokenInput = tokenInput.substr(0, line.find("/**", 0));
-      addLineToTokens(tokenInput);
+      line = removeCommentsFromString(line);
+      addLineToTokens(line);
     };
   }
 
@@ -266,6 +265,13 @@ public:
       return "&lt;";
     else
       return character;
+  }
+
+  string removeCommentsFromString(string line)
+  {
+    string tokenInput = line.substr(0, line.find("//", 0));
+    tokenInput = tokenInput.substr(0, line.find("/**", 0));
+    return tokenInput;
   }
 
   //CHECKERS
