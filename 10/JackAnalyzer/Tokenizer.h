@@ -18,17 +18,23 @@ private:
   vector<char> charTokens;
   vector<string> stringTokens;
 
-  vector<string> TOKEN_KEYWORDS = {"CLASS", "METHOD", "FUNCTION", "CONSTRUCTOR", "INT",
-                                   "BOOLEAN", "CHAR", "VOID", "VAR", "STATIC", "FIELD",
-                                   "LET", "DO", "IF", "ELSE", "WHILE", "RETURN", "TRUE",
-                                   "FALSE", "NULL", "THIS"};
+  // vector<string> TOKEN_KEYWORDS = {"CLASS", "METHOD", "FUNCTION", "CONSTRUCTOR", "INT",
+  //                                  "BOOLEAN", "CHAR", "VOID", "VAR", "STATIC", "FIELD",
+  //                                  "LET", "DO", "IF", "ELSE", "WHILE", "RETURN", "TRUE",
+  //                                  "FALSE", "NULL", "THIS"};
+
+  vector<string> TOKEN_KEYWORDS = {"class", "method", "function", "constructor", "int",
+                                   "boolean", "char", "void", "var", "static", "field",
+                                   "let", "do", "if", "else", "while", "return", "true",
+                                   "false", "null", "this"};
+
   vector<string> SYMBOLS = {"(", ")", "[", "]", "{", "}", ",", ";", "=", ".", "+", "-", "*",
                             "/", "&", "|", "~", "<", ">"};
 
 public:
   bool hasMoreTokens()
   {
-    return (tokenCount == stringTokens.size());
+    return (tokenCount != stringTokens.size());
   }
 
   void advance()
@@ -42,6 +48,7 @@ public:
   string tokenType()
   {
     const string token = stringTokens[tokenCount];
+
     if (isKeyword(token))
     {
       return "KEYWORD";
@@ -68,7 +75,7 @@ public:
   {
     if (tokenType() == "KEYWORD")
     {
-      return makeUpper(stringTokens[tokenCount]);
+      return stringTokens[tokenCount];
     }
   }
 
@@ -76,7 +83,7 @@ public:
   {
     if (tokenType() == "SYMBOL")
     {
-      return stringTokens[tokenCount];
+      return sanitiseSymbolCharacter(stringTokens[tokenCount]);
     }
   }
 
@@ -91,6 +98,16 @@ public:
   string stringVal()
   {
     if (tokenType() == "STRING_CONST")
+    {
+      int start = stringTokens[tokenCount].find('"') + 1;
+      int end = stringTokens[tokenCount].find_last_of('"') - 1;
+      return stringTokens[tokenCount].substr(start, end);
+    }
+  }
+
+  string identifier()
+  {
+    if (tokenType() == "IDENTIFIER")
     {
       return stringTokens[tokenCount];
     }
@@ -107,7 +124,7 @@ public:
   {
     populateTokens(fileName);
     splitBySymbols();
-    stringTokens = splitStringsAndRemoveInVec(stringTokens, ' ');
+    removeTokenSpaces();
   }
 
   void populateTokens(string fileName)
@@ -115,8 +132,9 @@ public:
     ifstream input(fileName);
     for (string line; getline(input, line);)
     {
-      string tokenInput = line.substr(0, line.find("/", 0));
-      stringTokens.push_back(tokenInput);
+      string tokenInput = line.substr(0, line.find("//", 0));
+      tokenInput = tokenInput.substr(0, line.find("/**", 0));
+      addLineToTokens(tokenInput);
     };
   }
 
@@ -126,6 +144,13 @@ public:
     {
       stringTokens = splitVecByChar(stringTokens, (*it)[0]);
     };
+  }
+
+  void removeTokenSpaces()
+  {
+    stringTokens = splitStringsAndRemoveInVec(stringTokens, ' ');
+    stringTokens = splitStringsAndRemoveInVec(stringTokens, '\r');
+    stringTokens = splitStringsAndRemoveInVec(stringTokens, '\t');
   }
 
   void addLineToTokens(string line)
@@ -189,14 +214,38 @@ public:
     return outputVector;
   }
 
+  vector<string> wrapStringInVector(string line)
+  {
+    stringstream inputString(line);
+    string segment;
+    vector<string> outputVector;
+    while (getline(inputString, segment))
+    {
+      if (checkNotCommentOrSpace(segment))
+      {
+        outputVector.push_back(segment);
+      }
+    }
+    return outputVector;
+  }
+
   vector<string> splitStringsAndRemoveInVec(vector<string> inputVec, char c)
   {
     vector<string> tempVec;
     vector<string> outputVec;
     for (vector<string>::iterator it = inputVec.begin(); it != inputVec.end(); ++it)
     {
-      tempVec = splitStringAndRemoveByChar(*it, c);
-      outputVec.insert(outputVec.end(), tempVec.begin(), tempVec.end());
+
+      if (!isString(*it))
+      {
+        tempVec = splitStringAndRemoveByChar(*it, c);
+        outputVec.insert(outputVec.end(), tempVec.begin(), tempVec.end());
+      }
+      else
+      {
+        tempVec = wrapStringInVector(*it);
+        outputVec.insert(outputVec.end(), tempVec.begin(), tempVec.end());
+      }
     };
     return outputVec;
   }
@@ -211,15 +260,23 @@ public:
     return outputString;
   }
 
+  string sanitiseSymbolCharacter(string character)
+  {
+    if (character == "<")
+      return "&lt;";
+    else
+      return character;
+  }
+
   //CHECKERS
   bool checkNotCommentOrSpace(string line)
   {
-    return (line[0] != '/' && line[1] != '/' && line.find_first_not_of("\t\n\v\f\r") != string::npos);
+    return (line.find_first_not_of("\t\n\v\f\r") != string::npos);
   }
 
   bool isKeyword(const string &line)
   {
-    if (std::find(TOKEN_KEYWORDS.begin(), TOKEN_KEYWORDS.end(), line) != TOKEN_KEYWORDS.end())
+    if (find(TOKEN_KEYWORDS.begin(), TOKEN_KEYWORDS.end(), line) != TOKEN_KEYWORDS.end())
       return true;
     else
       return false;
@@ -227,7 +284,7 @@ public:
 
   bool isSymbol(const string &line)
   {
-    if (std::find(SYMBOLS.begin(), SYMBOLS.end(), line) != SYMBOLS.end())
+    if (find(SYMBOLS.begin(), SYMBOLS.end(), line) != SYMBOLS.end())
       return true;
     else
       return false;

@@ -15,40 +15,42 @@ class CompilationEngine
 {
 private:
   ofstream outputFile;
+  string outputFileName;
   Tokenizer myTokenizer;
 
 public:
   void loadEngine(string inputFileName)
   {
     myTokenizer.loadTokens(inputFileName);
-    // myTokenizer.printTokens();
-    translateCode();
+    outputFile.open(outputFileName + ".xml");
+    compileClass();
+    myTokenizer.printTokens();
   }
 
-  void translateCode()
+  void compileClass()
   {
-    cout << "Translating" << endl;
+    outputFile << "<tokens>" << endl;
     while (myTokenizer.hasMoreTokens())
     {
       if (myTokenizer.tokenType() == "KEYWORD")
       {
-        cout << "KEYWORD" << endl;
+        outputFile << createTag("keyword", myTokenizer.keyWord());
       }
       else if (myTokenizer.tokenType() == "SYMBOL")
       {
-        cout << "SYMBOL" << endl;
+        outputFile << createTag("symbol", myTokenizer.symbol());
       }
       else if (myTokenizer.tokenType() == "STRING_CONST")
       {
-        cout << "STRING_CONST" << endl;
+        outputFile << createTag("stringConstant", myTokenizer.stringVal());
       }
       else if (myTokenizer.tokenType() == "INT_CONST")
       {
-        cout << "INT_CONST" << endl;
+        outputFile << createTag("integerConstant", myTokenizer.intVal());
       }
       else if (myTokenizer.tokenType() == "IDENTIFIER")
       {
-        cout << "IDENTIFIER" << endl;
+        outputFile << createTag("identifier", myTokenizer.identifier());
       }
       else
       {
@@ -56,10 +58,7 @@ public:
       }
       myTokenizer.advance();
     }
-  }
-
-  void compileClass()
-  {
+    outputFile << "</tokens>" << endl;
   }
 
   void compileClassVarDec()
@@ -68,6 +67,19 @@ public:
 
   void compileSubroutineDec()
   {
+  }
+
+  void setOutputFileName(string outputFileString)
+  {
+    outputFileName = outputFileString;
+  }
+
+  string createTag(string tagName, string tagValue)
+  {
+    string outputString;
+    outputString = "<" + tagName;
+    outputString += "> " + tagValue + " </" + tagName + ">\n";
+    return outputString;
   }
 };
 

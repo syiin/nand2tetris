@@ -25,6 +25,7 @@ public:
   {
     for (auto const &file : inputDir)
     {
+      compEngine.setOutputFileName(file.first);
       compEngine.loadEngine(file.second);
     }
   }
