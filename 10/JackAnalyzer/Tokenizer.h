@@ -18,11 +18,6 @@ private:
   vector<char> charTokens;
   vector<string> stringTokens;
 
-  // vector<string> TOKEN_KEYWORDS = {"CLASS", "METHOD", "FUNCTION", "CONSTRUCTOR", "INT",
-  //                                  "BOOLEAN", "CHAR", "VOID", "VAR", "STATIC", "FIELD",
-  //                                  "LET", "DO", "IF", "ELSE", "WHILE", "RETURN", "TRUE",
-  //                                  "FALSE", "NULL", "THIS"};
-
   vector<string> TOKEN_KEYWORDS = {"class", "method", "function", "constructor", "int",
                                    "boolean", "char", "void", "var", "static", "field",
                                    "let", "do", "if", "else", "while", "return", "true",
@@ -51,29 +46,29 @@ public:
 
     if (isKeyword(token))
     {
-      return "KEYWORD";
+      return "keyword";
     }
     else if (isSymbol(token))
     {
-      return "SYMBOL";
+      return "symbol";
     }
     else if (isString(token))
     {
-      return "STRING_CONST";
+      return "string_const";
     }
     else if (isNumber(token))
     {
-      return "INT_CONST";
+      return "int_const";
     }
     else
     {
-      return "IDENTIFIER";
+      return "identifier";
     }
   }
 
   string keyWord()
   {
-    if (tokenType() == "KEYWORD")
+    if (tokenType() == "keyword")
     {
       return stringTokens[tokenCount];
     }
@@ -81,7 +76,7 @@ public:
 
   string symbol()
   {
-    if (tokenType() == "SYMBOL")
+    if (tokenType() == "symbol")
     {
       return sanitiseSymbolCharacter(stringTokens[tokenCount]);
     }
@@ -89,7 +84,7 @@ public:
 
   string intVal()
   {
-    if (tokenType() == "INT_CONST")
+    if (tokenType() == "int_const")
     {
       return stringTokens[tokenCount];
     }
@@ -97,7 +92,7 @@ public:
 
   string stringVal()
   {
-    if (tokenType() == "STRING_CONST")
+    if (tokenType() == "string_const")
     {
       int start = stringTokens[tokenCount].find('"') + 1;
       int end = stringTokens[tokenCount].find_last_of('"') - 1;
@@ -107,7 +102,7 @@ public:
 
   string identifier()
   {
-    if (tokenType() == "IDENTIFIER")
+    if (tokenType() == "identifier")
     {
       return stringTokens[tokenCount];
     }
@@ -163,7 +158,7 @@ public:
     tokenCount = 0;
   }
 
-  //STRING & VECTOR MANIPULATION FUNCTIONS
+  //VECTOR MANIPULATION FUNCTIONS
   vector<string> splitVecByChar(vector<string> inputVec, char c)
   {
     vector<string> tempVec;
@@ -249,6 +244,7 @@ public:
     return outputVec;
   }
 
+  //STRING MANIPULATION
   string makeUpper(string inputString)
   {
     string outputString = "";
@@ -323,110 +319,3 @@ public:
 };
 
 #endif
-
-/*
-
-ARCHIVE:
-
-string getStringInCharToken()
-  {
-    string word = "";
-    for (vector<char>::iterator it = charTokens.begin(); it != charTokens.end(); ++it)
-    {
-      if (!isSymbol(*it))
-      {
-        word = word + (*it);
-      }
-      else
-      {
-        stringTokens.push_back(word);
-        word = "";
-      }
-
-      if (isKeyword(word))
-      {
-        stringTokens.push_back(word);
-        word = "";
-      }
-    };
-  }
-
-  void initCharTokens(string fileName)
-  {
-    ifstream input(fileName);
-    for (string line; getline(input, line);)
-    {
-      if (checkNotCommentOrSpace(line))
-      {
-        line = line.substr(0, line.find("/", 0));
-        addCharToTokens(line);
-      }
-    };
-  }
-
-  void addCharToTokens(string line)
-  {
-    for (const char &c : line)
-    {
-      addCharWithoutSpaces(c);
-    }
-  };
-
-  void addCharWithoutSpaces(char c)
-  {
-    if (c != ' ' && c != '\r')
-    {
-      charTokens.push_back(c);
-    }
-  }
-
-void initStringTokens(string fileName)
-  {
-    ifstream input(fileName);
-    for (string line; getline(input, line);)
-    {
-      istringstream iss(line.substr(0, line.find("/", 0)));
-      for (string token; getline(iss, token, ' ');)
-        if (checkNotCommentOrSpace(token))
-        {
-          if (checkForSemiColon(token))
-          {
-            addSCToTokens(token);
-          }
-          else if (checkForBrackets(token))
-          {
-          }
-          else
-          {
-            addLineToTokens(token);
-          }
-        }
-    };
-  }
-
-  void addBracketToTokens(string line)
-  {
-    if (line[0] == '(')
-    {
-      int start = line.find('(');
-      int end = line.find(')');
-      addLineToTokens("(");
-      addLineToTokens(line.substr(start, end));
-      addLineToTokens(")");
-    }
-    else if (line[0] == '[')
-    {
-      int start = line.find('[');
-      int end = line.find(']');
-      addLineToTokens("[");
-      addLineToTokens(line.substr(start, end));
-      addLineToTokens("]");
-    }
-  }
-
-    void addLineToTokens(string line)
-  {
-    stringTokens.push_back(line);
-  }
-
-*/
