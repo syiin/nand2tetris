@@ -1,0 +1,145 @@
+<class>
+<keyword> class </keyword>
+<identifier> Main </identifier>
+<symbol> { </symbol>
+<subroutineDec>
+<keyword> function </keyword>
+<keyword> void </keyword>
+<identifier> main </identifier>
+<symbol> ( </symbol>
+<parameterList>
+</parameterList>
+<symbol> ) </symbol>
+<subroutineBody>
+<symbol> { </symbol>
+<varDec>
+<keyword> var </keyword>
+<identifier> Array </identifier>
+<identifier> a </identifier>
+<symbol> ; </symbol>
+</varDec>
+<varDec>
+<keyword> var </keyword>
+<keyword> int </keyword>
+<identifier> length </identifier>
+<symbol> ; </symbol>
+</varDec>
+<varDec>
+<keyword> var </keyword>
+<keyword> int </keyword>
+<identifier> i </identifier>
+<symbol> , </symbol>
+<identifier> sum </identifier>
+<symbol> ; </symbol>
+</varDec>
+<statements>
+<letStatement>
+<keyword> let </keyword>
+<identifier> length </identifier>
+<symbol> = </symbol>
+<expression>
+<term>
+<identifier> Keyboard </identifier>
+<symbol> . </symbol>
+<identifier> readInt </identifier>
+<symbol> ( </symbol>
+<expressionList>
+<expression>
+<term>
+<stringConstant> HOW MANY NUMBERS?  </stringConstant>
+<symbol> ) </symbol>
+</term>
+</expression>
+</expressionList>
+<symbol> ; </symbol>
+</term>
+<term>
+<keyword> let </keyword>
+<identifier> a </identifier>
+</term>
+<term>
+<symbol> = </symbol>
+<identifier> Array </identifier>
+</term>
+<term>
+<symbol> . </symbol>
+<identifier> new </identifier>
+</term>
+<term>
+<symbol> ( </symbol>
+<identifier> length </identifier>
+</term>
+</expression>
+<symbol> ) </symbol>
+<symbol> ; </symbol>
+</letStatement>
+<letStatement>
+<keyword> let </keyword>
+<identifier> i </identifier>
+<symbol> = </symbol>
+<expression>
+<term>
+<int_const> 0 </int_const>
+<symbol> ; </symbol>
+</term>
+<term>
+<keyword> while </keyword>
+<symbol> ( </symbol>
+</term>
+<term>
+<identifier> i </identifier>
+<symbol> &lt; </symbol>
+</term>
+<term>
+<identifier> length </identifier>
+<symbol> ) </symbol>
+</term>
+<term>
+<symbol> { </symbol>
+<keyword> let </keyword>
+</term>
+<term>
+<identifier> a </identifier>
+<expression>
+<term>
+<symbol> [ </symbol>
+<identifier> i </identifier>
+</term>
+</expression>
+<symbol> ] </symbol>
+<symbol> = </symbol>
+</term>
+<term>
+<identifier> Keyboard </identifier>
+<symbol> . </symbol>
+<identifier> readInt </identifier>
+<symbol> ( </symbol>
+<expressionList>
+<expression>
+<term>
+<stringConstant> ENTER THE NEXT NUMBER:  </stringConstant>
+<symbol> ) </symbol>
+</term>
+</expression>
+</expressionList>
+<symbol> ; </symbol>
+</term>
+<term>
+<keyword> let </keyword>
+<identifier> i </identifier>
+</term>
+<term>
+<symbol> = </symbol>
+<identifier> i </identifier>
+</term>
+<term>
+<symbol> + </symbol>
+<int_const> 1 </int_const>
+</term>
+</expression>
+<symbol> ; </symbol>
+</letStatement>
+</statements>
+</subroutineBody>
+</subroutineDec>
+</class>

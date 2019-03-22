@@ -55,7 +55,8 @@ public:
 
       if (isDir(filePath))
       {
-        outputMap[fileName] = filePath;
+        int end = fileName.find_last_of('.');
+        outputMap[fileName.substr(0, end)] = filePath;
       };
     }
     return outputMap;

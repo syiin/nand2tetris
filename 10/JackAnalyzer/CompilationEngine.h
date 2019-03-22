@@ -34,39 +34,39 @@ public:
   {
     outputFile << "<class>" << endl;
     loadNxtToken();
-    outputFile << createTagLoadNext("keyword", tokenString)
-               << createTagLoadNext("identifier", tokenString)
-               << createTagLoadNext("symbol", tokenString);
-    compileClassVarDec();
+    outputFile << createTagLoadNext(tokenType, tokenString)
+               << createTagLoadNext(tokenType, tokenString)
+               << createTagLoadNext(tokenType, tokenString);
+    if (tokenString == "var" || tokenString == "field")
+    {
+      compileClassVarDec();
+    }
+    else
+    {
+      compileSubroutineDec();
+    }
     outputFile << "</class>" << endl;
   }
 
   void compileClassVarDec()
   {
     outputFile << "<classVarDec>" << endl;
-    while (tokenString != "function" || tokenString != "method" || tokenString != "constructor")
+    while (tokenString != "function" && tokenString != "method" && tokenString != "constructor")
     {
-      outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
-
-      while (tokenString != ";")
-      {
-        outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
-      }
-      outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
+      outputFile << createTagLoadNext(tokenType, tokenString);
     }
     outputFile << "</classVarDec>" << endl;
+    compileSubroutineDec();
   }
 
   void compileSubroutineDec()
   {
     outputFile << "<subroutineDec>" << endl;
-
-    while (tokenString != "}")
+    while (tokenString != "(")
     {
-      outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
+      outputFile << createTagLoadNext(tokenType, tokenString);
     }
-    outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
-
+    outputFile << createTagLoadNext(tokenType, tokenString);
     compileParameterList();
     outputFile << "</subroutineDec>" << endl;
   }
@@ -74,32 +74,31 @@ public:
   void compileParameterList()
   {
     outputFile << "<parameterList>" << endl;
-
     while (tokenString != ")")
     {
-      outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
+      outputFile << createTagLoadNext(tokenType, tokenString);
     }
-    outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
+    outputFile << "</parameterList>" << endl;
+    outputFile << createTagLoadNext(tokenType, tokenString);
 
     compileSubroutineBody();
-    outputFile << "</parameterList>" << endl;
   }
 
   void compileSubroutineBody()
   {
-    outputFile << "<subroutineBody>" << endl
-               << createTagLoadNext("symbol", tokenString)
-               << "</subroutineBody>" << endl;
+    outputFile << "<subroutineBody>" << endl;
+    outputFile << createTagLoadNext(tokenType, tokenString);
+    while (tokenString != "while" && tokenString != "let" && tokenString != "while")
+    {
+      compileVarDec();
+    }
+
     while (tokenString != "}")
     {
-      if (tokenString == "var")
-        compileVarDec();
-      else if (tokenString == "let")
-        compileLet();
-      else if (tokenString == "if")
-        compileIf();
+      compileStatements();
     }
-    outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
+
+    outputFile << "</subroutineBody>" << endl;
   }
 
   void compileVarDec()
@@ -107,16 +106,16 @@ public:
     outputFile << "<varDec>" << endl;
     while (tokenString != ";")
     {
-      outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
+      outputFile << createTagLoadNext(tokenType, tokenString);
     }
-    outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
+    outputFile << createTagLoadNext(tokenType, tokenString);
     outputFile << "</varDec>" << endl;
   }
 
   void compileStatements()
   {
     outputFile << "<statements>" << endl;
-    while (tokenString != ";")
+    while (tokenString != "}")
     {
       if (tokenString == "let")
         compileLet();
@@ -136,13 +135,16 @@ public:
   {
     outputFile << "<letStatement>" << endl;
 
-    while (tokenString != ";")
+    while (tokenString != ";" && tokenString != "}")
     {
-      outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
+      outputFile << createTagLoadNext(tokenType, tokenString);
+      if (tokenString == "=")
+      {
+        outputFile << createTagLoadNext(tokenType, tokenString);
+        compileExpression();
+      }
     }
-    outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
-
-    compileExpression();
+    outputFile << createTagLoadNext(tokenType, tokenString);
 
     outputFile << "</letStatement>" << endl;
   }
@@ -150,34 +152,52 @@ public:
   void compileIf()
   {
     outputFile << "<ifStatement>" << endl;
-    while (tokenString != "}")
+
+    while (tokenString != "(")
     {
-      outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
+      outputFile << createTagLoadNext(tokenType, tokenString); //'if'
     }
-    outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
+    outputFile << createTagLoadNext(tokenType, tokenString); //'()
+
+    compileExpression();
+    outputFile << createTagLoadNext(tokenType, tokenString); // ')'
+    outputFile << createTagLoadNext(tokenType, tokenString); // '{'
+
+    compileStatements();
     outputFile << "</ifStatement>" << endl;
   }
 
   void compileWhile()
   {
     outputFile << "<whileStatement>" << endl;
-    while (tokenString != "}")
+    while (tokenString != "(")
     {
-      outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
+      outputFile << createTagLoadNext(tokenType, tokenString);
     }
-    outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
+    outputFile << createTagLoadNext(tokenType, tokenString);
+
+    compileExpression();
+
+    outputFile << createTagLoadNext(tokenType, tokenString);
+
+    compileStatements();
     outputFile << "</whileStatement>" << endl;
   }
 
   void compileDo()
   {
     outputFile << "<doStatement>" << endl;
-    while (tokenString != "}")
+    while (tokenString != ";")
     {
-      outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
+      outputFile << createTagLoadNext(tokenType, tokenString);
+      if (tokenString == "(")
+      {
+        outputFile << createTagLoadNext(tokenType, tokenString);
+        compileExpressionList();
+      }
     }
-    outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
-    outputFile << "</whileStatement>" << endl;
+    outputFile << createTagLoadNext(tokenType, tokenString);
+    outputFile << "</doStatement>" << endl;
   }
 
   void compileReturn()
@@ -185,51 +205,61 @@ public:
     outputFile << "<returnStatement>" << endl;
     while (tokenString != ";")
     {
-      outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
+      outputFile << createTagLoadNext(tokenType, tokenString);
     }
-    outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
+    outputFile << createTagLoadNext(tokenType, tokenString);
     outputFile << "</returnStatement>" << endl;
+  }
+
+  void compileExpressionList()
+  {
+    outputFile << "<expressionList>" << endl;
+    while (tokenString != ")" && tokenString != "}" && tokenString != ";")
+    {
+      compileExpression();
+    }
+    outputFile << "</expressionList>" << endl;
   }
 
   void compileExpression()
   {
-    while (tokenString != ";")
+    outputFile << "<expression>" << endl;
+    while (tokenString != "," && tokenString != "}" && tokenString != ";" && tokenString != "]" && tokenString != ")")
     {
       compileTerm();
     }
+    // outputFile << createTagLoadNext(tokenType, tokenString);
+    outputFile << "</expression>" << endl;
   }
 
   void compileTerm()
   {
     outputFile << "<term>" << endl;
-    string currentToken = tokenString;
-    loadNxtToken();
-    string nextToken = tokenString;
 
-    while (tokenString != ";")
+    string nextTokenString = myTokenizer.lookAheadString();
+    if (nextTokenString == ".")
     {
-      if (nextToken == "[")
-      {
-        outputFile << createFullTag("symbol", "[");
-        compileExpression();
-        outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
-      }
-      else if (nextToken == ".")
-      {
-        outputFile << createFullTag("symbol", ".")
-                   << createTagLoadNext(myTokenizer.tokenType(), tokenString);
-      }
-      else if (nextToken == "(")
-      {
-        outputFile << createFullTag("symbol", "(");
-        compileExpression();
-        outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
-      }
-      else
-      {
-        outputFile << createTagLoadNext(myTokenizer.tokenType(), tokenString);
-      }
+      while (tokenString != "(")
+        outputFile << createTagLoadNext(tokenType, tokenString);
+
+      outputFile << createTagLoadNext(tokenType, tokenString); // '('
+      compileExpressionList();
+
+      while (tokenString != ";")
+        outputFile << createTagLoadNext(tokenType, tokenString);
     }
+    else if (nextTokenString == "[")
+    {
+
+      outputFile << createTagLoadNext(tokenType, tokenString);
+      compileExpression();
+      outputFile << createTagLoadNext(tokenType, tokenString);
+    }
+    else
+    {
+      outputFile << createTagLoadNext(tokenType, tokenString);
+    }
+    outputFile << createTagLoadNext(tokenType, tokenString);
     outputFile << "</term>" << endl;
   }
 
@@ -240,6 +270,7 @@ public:
 
   void loadNxtToken()
   {
+    tokenType = myTokenizer.tokenType();
     if (myTokenizer.tokenType() == "keyword")
     {
       tokenString = myTokenizer.keyWord();
@@ -248,7 +279,7 @@ public:
     {
       tokenString = myTokenizer.symbol();
     }
-    else if (myTokenizer.tokenType() == "string_const")
+    else if (myTokenizer.tokenType() == "stringConstant")
     {
       tokenString = myTokenizer.stringVal();
     }

@@ -29,7 +29,7 @@ private:
 public:
   bool hasMoreTokens()
   {
-    return (tokenCount != stringTokens.size());
+    return (tokenCount <= stringTokens.size());
   }
 
   void advance()
@@ -54,7 +54,7 @@ public:
     }
     else if (isString(token))
     {
-      return "string_const";
+      return "stringConstant";
     }
     else if (isNumber(token))
     {
@@ -92,7 +92,7 @@ public:
 
   string stringVal()
   {
-    if (tokenType() == "string_const")
+    if (tokenType() == "stringConstant")
     {
       int start = stringTokens[tokenCount].find('"') + 1;
       int end = stringTokens[tokenCount].find_last_of('"') - 1;
@@ -106,6 +106,11 @@ public:
     {
       return stringTokens[tokenCount];
     }
+  }
+
+  string lookAheadString()
+  {
+    return stringTokens[tokenCount];
   }
 
   //TOKEN MANIPULATION
