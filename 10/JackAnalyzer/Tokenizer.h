@@ -58,7 +58,7 @@ public:
     }
     else if (isNumber(token))
     {
-      return "int_const";
+      return "integerConstant";
     }
     else
     {
@@ -84,7 +84,7 @@ public:
 
   string intVal()
   {
-    if (tokenType() == "int_const")
+    if (tokenType() == "integerConstant")
     {
       return stringTokens[tokenCount];
     }
@@ -111,6 +111,16 @@ public:
   string lookAheadString()
   {
     return stringTokens[tokenCount];
+  }
+
+  string lookBehindString()
+  {
+    return stringTokens[tokenCount - 2];
+  }
+
+  string lookAheadType()
+  {
+    return tokenType();
   }
 
   //TOKEN MANIPULATION
@@ -148,8 +158,8 @@ public:
   void removeTokenSpaces()
   {
     stringTokens = splitStringsAndRemoveInVec(stringTokens, ' ');
-    stringTokens = splitStringsAndRemoveInVec(stringTokens, '\r');
-    stringTokens = splitStringsAndRemoveInVec(stringTokens, '\t');
+    // stringTokens = splitStringsAndRemoveInVec(stringTokens, '\r');
+    // stringTokens = splitStringsAndRemoveInVec(stringTokens, '\t');
   }
 
   void addLineToTokens(string line)
@@ -234,15 +244,14 @@ public:
     vector<string> outputVec;
     for (vector<string>::iterator it = inputVec.begin(); it != inputVec.end(); ++it)
     {
-
-      if (!isString(*it))
+      if (!isString(removeSpaces(*it)))
       {
         tempVec = splitStringAndRemoveByChar(*it, c);
         outputVec.insert(outputVec.end(), tempVec.begin(), tempVec.end());
       }
       else
       {
-        tempVec = wrapStringInVector(*it);
+        tempVec = wrapStringInVector(removeSpaces(*it));
         outputVec.insert(outputVec.end(), tempVec.begin(), tempVec.end());
       }
     };
@@ -250,6 +259,14 @@ public:
   }
 
   //STRING MANIPULATION
+
+  string removeSpaces(std::string str)
+  {
+    str.erase(remove(str.begin(), str.end(), '\r'), str.end());
+    str.erase(remove(str.begin(), str.end(), ' '), str.end());
+    return str;
+  };
+
   string makeUpper(string inputString)
   {
     string outputString = "";
