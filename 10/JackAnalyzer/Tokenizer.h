@@ -158,12 +158,13 @@ public:
   void removeTokenSpaces()
   {
     stringTokens = splitStringsAndRemoveInVec(stringTokens, ' ');
-    // stringTokens = splitStringsAndRemoveInVec(stringTokens, '\r');
-    // stringTokens = splitStringsAndRemoveInVec(stringTokens, '\t');
+    stringTokens = splitStringsAndRemoveInVec(stringTokens, '\r');
+    stringTokens = splitStringsAndRemoveInVec(stringTokens, '\t');
   }
 
   void addLineToTokens(string line)
   {
+
     stringTokens.push_back(line);
   }
 
@@ -223,7 +224,7 @@ public:
     return outputVector;
   }
 
-  vector<string> wrapStringInVector(string line)
+  vector<string> processString(string line)
   {
     stringstream inputString(line);
     string segment;
@@ -232,6 +233,7 @@ public:
     {
       if (checkNotCommentOrSpace(segment))
       {
+        segment = leaveOnlyQuotations(segment);
         outputVector.push_back(segment);
       }
     }
@@ -251,7 +253,8 @@ public:
       }
       else
       {
-        tempVec = wrapStringInVector(removeSpaces(*it));
+
+        tempVec = processString(*it);
         outputVec.insert(outputVec.end(), tempVec.begin(), tempVec.end());
       }
     };
@@ -259,6 +262,15 @@ public:
   }
 
   //STRING MANIPULATION
+
+  string leaveOnlyQuotations(string str)
+  {
+    string tempString = str;
+    int start = tempString.find('"');
+    int end = tempString.find_last_of('"') - 1;
+    return tempString.substr(start, end);
+    ;
+  }
 
   string removeSpaces(std::string str)
   {
