@@ -8,6 +8,8 @@
 #include <experimental/filesystem>
 
 #include "Tokenizer.h"
+#include "SymbolTable.h"
+#include "VMWriter.h"
 
 using namespace std;
 
@@ -16,7 +18,10 @@ class CompilationEngine
 private:
   ofstream outputFile;
   string outputFileName;
+
   Tokenizer myTokenizer;
+  VMWriter myWriter;
+  SymbolTable myTable;
 
   string tokenString;
   string tokenType;
@@ -25,15 +30,14 @@ public:
   void loadEngine(string inputFileName)
   {
     myTokenizer.loadTokens(inputFileName);
-    outputFile.open(outputFileName + ".xml");
-    compileClass();
-    // myTokenizer.printTokens();
+    myWriter.startWriter(outputFileName);
+    // compileClass();
   }
 
   void compileClass()
   {
-    outputFile << "<class>" << endl;
     loadNxtToken();
+
     outputFile << createTagLoadNext(tokenType, tokenString)  //class
                << createTagLoadNext(tokenType, tokenString)  //identifier
                << createTagLoadNext(tokenType, tokenString); //{

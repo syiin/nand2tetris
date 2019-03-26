@@ -1,7 +1,7 @@
 #ifndef VMWRITER_H
 #define VMWRITER_H
 
-#include string
+#include <string>
 
 class VMWriter
 {
@@ -10,20 +10,24 @@ private:
   ofstream outputFile;
 
 public:
-  VMWriter(string fileName)
+  void startWriter(string fileName)
   {
     outputFileName = fileName;
+    int end = fileName.find_last_of('.');
+    outputFileName = fileName.substr(0, end);
     outputFile.open(outputFileName + ".vm");
-  }
+
+    cout << outputFileName + ".vm" << endl;
+    }
 
   void writePush(string segment, int idx)
   {
-    outputFile << "push " << segment << " " << idx << endl;
+    outputFile << "push " << segment << " " << to_string(idx) << endl;
   }
 
-  void writePush(string segment, int idx)
+  void writePop(string segment, int idx)
   {
-    outputFile << "pop " << segment << " " << idx << endl;
+    outputFile << "pop " << segment << " " << to_string(idx) << endl;
   }
 
   void writeArithmetic(string command)
@@ -58,12 +62,12 @@ public:
 
   void writeReturn()
   {
-    outputFile << "return"
+    outputFile << "return";
   }
 
   void close()
   {
-    outputFile.close()
+    outputFile.close();
   }
 };
 
