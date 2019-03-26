@@ -11,8 +11,8 @@ Project:
 - [x] 6 &nbsp;&nbsp;&nbsp; Wrote an assembler in C++ that converts a .asm assembly language file to .hack binary  
 - [x] 7 &nbsp;&nbsp;&nbsp; Wrote a VM translator in C++ that converts Jack VM language into .hack assembly language
 - [x] 8 &nbsp;&nbsp;&nbsp; VM translator can now handle function declarations, function calls, function returns and bootstrap system initialisation as well as if and goto branching statements
-- [ ] 9
-- [ ] 10
+- [x] 9 &nbsp;&nbsp;&nbsp; Just looks around and tinkered with the Jack code
+- [x] 10 &nbsp;&nbsp;&nbsp; Built a token analyzer that parses Jack code with recursive parsing and converts it into a XML file
 - [ ] 11
 - [ ] 12
 - [ ] 13
