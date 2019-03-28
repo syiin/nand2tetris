@@ -140,10 +140,20 @@ public:
   void populateTokens(string fileName)
   {
     ifstream input(fileName);
+    string lastLine = " ";
+    bool inComment = false;
     for (string line; getline(input, line);)
     {
-      line = removeCommentsFromString(line);
-      addLineToTokens(line);
+      if (line.substr(0, 4) == "/**" || removeSpaces(line)[0] == '*' || removeSpaces(line) == "*/")
+        inComment = true;
+      else
+        inComment = false;
+
+      if (!inComment)
+      {
+        line = removeCommentsFromString(line);
+        addLineToTokens(line);
+      }
     };
   }
 

@@ -8,6 +8,7 @@ using namespace std;
 int main(int argc, char *argv[])
 {
   JackCompiler myCompiler(*(argv + 1));
+
   myCompiler.compileVMCode();
   return 0;
 }

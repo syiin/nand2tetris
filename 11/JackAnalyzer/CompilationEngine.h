@@ -18,10 +18,12 @@ class CompilationEngine
 private:
   ofstream outputFile;
   string outputFileName;
+  string currentClassName;
 
   Tokenizer myTokenizer;
   VMWriter myWriter;
   SymbolTable myTable;
+  map<string, string> arithOpsTable;
 
   string tokenString;
   string tokenType;
@@ -31,16 +33,17 @@ public:
   {
     myTokenizer.loadTokens(inputFileName);
     myWriter.startWriter(outputFileName);
-    // compileClass();
+    initArithOpsTable();
+    // myTokenizer.printTokens();
+    compileClass();
   }
 
   void compileClass()
   {
-    loadNxtToken();
-
-    outputFile << createTagLoadNext(tokenType, tokenString)  //class
-               << createTagLoadNext(tokenType, tokenString)  //identifier
-               << createTagLoadNext(tokenType, tokenString); //{
+    loadNxtToken();                   //empty space
+    loadNxtToken();                   //class
+    setCurrentClassName(tokenString); //class identifier
+    loadNxtToken();                   //{
 
     if (!checkIfFunction())
     {
@@ -51,18 +54,16 @@ public:
       compileSubroutineDec();
     }
 
-    outputFile << createTagLoadNext(tokenType, tokenString); //}
-    outputFile << "</class>" << endl;
+    loadNxtToken(); //}
   }
 
   void compileClassVarDec()
   {
-    outputFile << "<classVarDec>" << endl;
+
     while (!checkIfFunction())
     {
       outputFile << createTagLoadNext(tokenType, tokenString);
     }
-    outputFile << "</classVarDec>" << endl;
 
     while (tokenString != "}")
     {
@@ -72,35 +73,56 @@ public:
 
   void compileSubroutineDec()
   {
-    outputFile << "<subroutineDec>" << endl;
+    string outputString;
+    loadNxtToken();                                      //function
+    loadNxtToken();                                      //return type
+    outputString = currentClassName + "." + tokenString; //identifier
+    loadNxtToken();                                      //(
 
-    while (tokenString != "(" && tokenString != "}")
-    {
-      outputFile << createTagLoadNext(tokenType, tokenString); //function main void
-    }
-    outputFile << createTagLoadNext(tokenType, tokenString); // (
-    compileParameterList();
+    compileParameterList(outputString);
 
-    outputFile << "</subroutineDec>" << endl;
+    loadNxtToken(); // (
   }
 
-  void compileParameterList()
+  void compileParameterList(string functionName)
   {
-    outputFile << "<parameterList>" << endl;
+    myTable.startSubroutine();
+    string name;
+    string type;
+    int paramIdx = 0;
+    int paramCount = 0;
+
     while (tokenString != ")")
     {
-      outputFile << createTagLoadNext(tokenType, tokenString); //( arg 1, arg 2...
+      if (paramIdx == 0)
+      {
+        type = tokenString;
+        paramIdx++;
+      }
+      else if (paramIdx == 1)
+      {
+        name = tokenString;
+        paramIdx++;
+      }
+      else if (paramIdx == 2)
+      {
+        myTable.define(name, "argument", type);
+        paramIdx = 0;
+      }
+      loadNxtToken();
+      paramCount++;
     }
-    outputFile << "</parameterList>" << endl;
-    outputFile << createTagLoadNext(tokenType, tokenString); //)
+    myWriter.writeFunction(functionName, paramCount / 2);
+
+    loadNxtToken(); // )
 
     compileSubroutineBody();
   }
 
   void compileSubroutineBody()
   {
-    outputFile << "<subroutineBody>" << endl;
-    outputFile << createTagLoadNext(tokenType, tokenString);
+
+    loadNxtToken(); //{
 
     while (tokenString == "var")
     {
@@ -111,8 +133,8 @@ public:
     {
       compileStatements();
     }
-    outputFile << createTagLoadNext(tokenType, tokenString);
-    outputFile << "</subroutineBody>" << endl;
+
+    loadNxtToken(); //}
   }
 
   void compileVarDec()
@@ -128,7 +150,6 @@ public:
 
   void compileStatements()
   {
-    outputFile << "<statements>" << endl;
     while (tokenString != "}")
     {
       if (tokenString == "let")
@@ -142,7 +163,6 @@ public:
       else if (tokenString == "return")
         compileReturn();
     }
-    outputFile << "</statements>" << endl;
   }
 
   void compileLet()
@@ -211,16 +231,23 @@ public:
 
   void compileDo()
   {
-    outputFile << "<doStatement>" << endl;
-    while (tokenString != "(")
-    {
-      outputFile << createTagLoadNext(tokenType, tokenString); //do class.method
-    }
-    outputFile << createTagLoadNext(tokenType, tokenString); //(
-    compileExpressionList();
-    outputFile << createTagLoadNext(tokenType, tokenString); //)
-    outputFile << createTagLoadNext(tokenType, tokenString); //;
-    outputFile << "</doStatement>" << endl;
+    string outputString;
+    string className;
+    string methodName;
+    int nArgs;
+
+    loadNxtToken();          //do
+    className = tokenString; //Square
+    loadNxtToken();
+    loadNxtToken();           // .
+    methodName = tokenString; //main
+    loadNxtToken();           //(
+
+    nArgs = compileExpressionList();
+
+    myWriter.writeCall(className + "." + methodName, nArgs);
+    loadNxtToken(); //)
+    loadNxtToken(); //;
   }
 
   void compileReturn()
@@ -234,51 +261,53 @@ public:
     outputFile << "</returnStatement>" << endl;
   }
 
-  void compileExpressionList()
+  int compileExpressionList()
   {
-    outputFile << "<expressionList>" << endl;
+    int nArgs = 0;
     while (tokenString != ")" && tokenString != ";")
     {
       compileExpression();
+      nArgs++;
     }
-    outputFile << "</expressionList>" << endl;
+    return nArgs;
   }
 
   void compileExpression()
   {
-    outputFile << "<expression>" << endl;
+    string outputString;
+    vector<string> termVec;
+    vector<string> opVec;
+
     while (checkEndOfExpression())
     {
-      if (myTokenizer.lookBehindString() == "(" && tokenType == "symbol") // eg. (- j)
+      outputString = compileTerm();
+      if (tokenType == "integerConstant")
       {
-        compileTerm();
+        termVec.push_back(outputString);
       }
-      else if (tokenType == "symbol" && tokenString != "(")
+      else if (tokenType == "symbol")
       {
-        outputFile << createTagLoadNext(tokenType, tokenString); // eg. the <symbol>+</symbol> in (x + y)
+        opVec.push_back(outputString);
       }
-      else
-      {
-        compileTerm();
-      }
+      loadNxtToken();
     }
-    outputFile << "</expression>" << endl;
+
+    for (auto const &term : termVec)
+    {
+      myWriter.writePush("constant", stoi(term));
+    }
+
+    for (auto const &op : opVec)
+    {
+      myWriter.writeArithmetic(op);
+    }
   }
 
-  void compileTerm()
+  string compileTerm()
   {
-    outputFile << "<term>" << endl;
-
     string nextTokenString = myTokenizer.lookAheadString();
-    if (nextTokenString == ".")
-    {
-      while (tokenString != "(")
-        outputFile << createTagLoadNext(tokenType, tokenString); //class.method
-      outputFile << createTagLoadNext(tokenType, tokenString);   // (
-      compileExpressionList();
-      outputFile << createTagLoadNext(tokenType, tokenString); // )
-    }
-    else if (nextTokenString == "[")
+    string outputString;
+    if (nextTokenString == "[")
     {
       outputFile << createTagLoadNext(tokenType, tokenString); //identifier
       outputFile << createTagLoadNext(tokenType, tokenString); //[
@@ -296,16 +325,26 @@ public:
       outputFile << createTagLoadNext(tokenType, tokenString); //symbol
       compileTerm();                                           //<term>identifier</term>
     }
-    else
+    else if (tokenType == "symbol" && tokenString != "(")
     {
-      outputFile << createTagLoadNext(tokenType, tokenString);
+      outputString = arithOpsTable[tokenString];
+      return outputString;
     }
-    outputFile << "</term>" << endl;
+    else if (tokenType == "integerConstant")
+    {
+      outputString = tokenString;
+      return outputString;
+    }
   }
 
   void setOutputFileName(string outputFileString)
   {
     outputFileName = outputFileString;
+  }
+
+  void setCurrentClassName(string currentClassNameString)
+  {
+    currentClassName = currentClassNameString;
   }
 
   void loadNxtToken()
@@ -343,6 +382,13 @@ public:
     myTokenizer.advance();
   }
 
+  string getStringLoadNext()
+  {
+    string outputString = tokenString;
+    loadNxtToken();
+    return outputString;
+  }
+
   string createTagLoadNext(string tagName, string tagValue)
   {
     string outputString = createFullTag(tagName, tagValue);
@@ -375,6 +421,13 @@ public:
   {
     return (tokenString != "," && tokenString != ";" && tokenString != ")" && tokenString != "]");
   }
+
+  //INITIALIZERS
+  void initArithOpsTable()
+  {
+    arithOpsTable["+"] = "add";
+    arithOpsTable["*"] = "call Math.multiply 2";
+  };
 };
 
 #endif
