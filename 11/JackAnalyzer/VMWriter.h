@@ -18,11 +18,11 @@ public:
     outputFile.open(outputFileName + ".vm");
 
     cout << outputFileName + ".vm" << endl;
-    }
+  }
 
-  void writePush(string segment, int idx)
+  void writePush(string segment, string idx)
   {
-    outputFile << "push " << segment << " " << to_string(idx) << endl;
+    outputFile << "push " << segment << " " << idx << endl;
   }
 
   void writePop(string segment, int idx)

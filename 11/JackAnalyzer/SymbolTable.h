@@ -70,10 +70,18 @@ public:
   {
     if (checkIfContainsName(subroutineTable, name))
     {
+      if (subroutineTable[name].kind == "var")
+      {
+        return "local";
+      }
       return subroutineTable[name].kind;
     }
     else if (checkIfContainsName(classTable, name))
     {
+      if (classTable[name].kind == "var")
+      {
+        return "local";
+      }
       return classTable[name].kind;
     }
     return "NOT FOUND";
@@ -129,14 +137,14 @@ public:
   {
     cout << "CLASS TABLE:" << endl
          << "NAME \t"
-         << "KIND \t"
          << "TYPE \t"
+         << "KIND \t"
          << "IDX \t" << endl;
     for (auto const &symbol : classTable)
     {
       cout << symbol.first << '\t'
-           << symbol.second.kind << '\t'
            << symbol.second.type << '\t'
+           << symbol.second.kind << '\t'
            << symbol.second.idx << '\t'
            << endl;
     }

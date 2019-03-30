@@ -44,6 +44,7 @@ public:
     loadNxtToken();                   //class
     setCurrentClassName(tokenString); //class identifier
     loadNxtToken();                   //{
+    loadNxtToken();                   //function OR var
 
     if (!checkIfFunction())
     {
@@ -59,11 +60,21 @@ public:
 
   void compileClassVarDec()
   {
+    cout << tokenString << endl;
+    cout << !checkIfFunction() << endl;
 
     while (!checkIfFunction())
     {
-      outputFile << createTagLoadNext(tokenType, tokenString);
+      // vector<string> outputVarVec;
+      // while (tokenString != ";")
+      // {
+      //   outputVarVec.push_back(tokenString);
+      //   loadNxtToken();
+      // }
+      // myTable.define(outputVarVec[2], outputVarVec[1], outputVarVec[0]);
     }
+
+    myTable.printTable();
 
     while (tokenString != "}")
     {
@@ -74,10 +85,12 @@ public:
   void compileSubroutineDec()
   {
     string outputString;
-    loadNxtToken();                                      //function
-    loadNxtToken();                                      //return type
-    outputString = currentClassName + "." + tokenString; //identifier
-    loadNxtToken();                                      //(
+
+    loadNxtToken(); //return type
+    loadNxtToken(); //identifier
+    outputString = currentClassName + "." + tokenString;
+
+    loadNxtToken(); //(
 
     compileParameterList(outputString);
 
@@ -139,13 +152,14 @@ public:
 
   void compileVarDec()
   {
-    outputFile << "<varDec>" << endl;
+    vector<string> outputVarVec;
     while (tokenString != ";")
     {
-      outputFile << createTagLoadNext(tokenType, tokenString);
+      outputVarVec.push_back(tokenString);
+      loadNxtToken();
     }
-    outputFile << createTagLoadNext(tokenType, tokenString);
-    outputFile << "</varDec>" << endl;
+    myTable.define(outputVarVec[2], outputVarVec[0], outputVarVec[1]);
+    loadNxtToken(); //;
   }
 
   void compileStatements()
@@ -167,24 +181,27 @@ public:
 
   void compileLet()
   {
-    outputFile << "<letStatement>" << endl;
-
+    int idx;
+    string type;
+    string kind;
     while (tokenString != "=")
     {
-      outputFile << createTagLoadNext(tokenType, tokenString); //let a
-      if (tokenString == "[")                                  //handle array case
+      if (tokenString == "[")
       {
-        outputFile << createTagLoadNext(tokenType, tokenString); //[
+        loadNxtToken(); // [
         compileExpression();
-        outputFile << createTagLoadNext(tokenType, tokenString); //]
+        loadNxtToken(); // ]
       }
-    };
-
-    outputFile << createTagLoadNext(tokenType, tokenString); //=
+      idx = myTable.IndexOf(tokenString);
+      type = myTable.TypeOf(tokenString);
+      kind = myTable.KindOf(tokenString);
+      loadNxtToken();
+    }
+    loadNxtToken(); //=
     compileExpression();
-    outputFile << createTagLoadNext(tokenType, tokenString); //;
-
-    outputFile << "</letStatement>" << endl;
+    myTable.printTable();
+    myWriter.writePop(kind, idx); // pop segment idx
+    loadNxtToken();               //;
   }
 
   void compileIf()
@@ -266,6 +283,7 @@ public:
     int nArgs = 0;
     while (tokenString != ")" && tokenString != ";")
     {
+      loadNxtToken(); // ,
       compileExpression();
       nArgs++;
     }
@@ -275,30 +293,33 @@ public:
   void compileExpression()
   {
     string outputString;
-    vector<string> termVec;
-    vector<string> opVec;
+    vector<string> pushVec;
+    vector<string> afterVec;
 
     while (checkEndOfExpression())
     {
       outputString = compileTerm();
       if (tokenType == "integerConstant")
       {
-        termVec.push_back(outputString);
+        pushVec.push_back(outputString);
       }
       else if (tokenType == "symbol")
       {
-        opVec.push_back(outputString);
+        afterVec.push_back(outputString);
       }
       loadNxtToken();
     }
 
-    for (auto const &term : termVec)
+    for (auto const &term : pushVec)
     {
-      myWriter.writePush("constant", stoi(term));
+      cout << "term " << term << endl;
+      myWriter.writePush("constant", term);
     }
 
-    for (auto const &op : opVec)
+    for (auto const &op : afterVec)
     {
+      cout << "OP" << op << endl;
+      // THE FUNCTION CALLS (ie. MEMORY.PEEK) ARE SOMEHOW BEING RECOGNISED AS SYMBOLS?
       myWriter.writeArithmetic(op);
     }
   }
@@ -307,7 +328,19 @@ public:
   {
     string nextTokenString = myTokenizer.lookAheadString();
     string outputString;
-    if (nextTokenString == "[")
+    if (nextTokenString == ".")
+    {
+      while (tokenString != "(")
+      {
+        outputString = outputString + tokenString; //class.method
+        loadNxtToken();
+      }
+      loadNxtToken(); // (
+      int nArgs = compileExpressionList();
+      loadNxtToken(); // )
+      // myWriter.writeCall(outputString, nArgs);
+    }
+    else if (nextTokenString == "[")
     {
       outputFile << createTagLoadNext(tokenType, tokenString); //identifier
       outputFile << createTagLoadNext(tokenType, tokenString); //[
@@ -427,6 +460,7 @@ public:
   {
     arithOpsTable["+"] = "add";
     arithOpsTable["*"] = "call Math.multiply 2";
+    arithOpsTable["-"] = "neg";
   };
 };
 
