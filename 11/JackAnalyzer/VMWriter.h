@@ -8,6 +8,7 @@ class VMWriter
 private:
   string outputFileName;
   ofstream outputFile;
+  vector<string> ARITH_SYMBOLS = {"+", "-", "*", "/", ">", "<"};
 
 public:
   void startWriter(string fileName)
@@ -32,7 +33,10 @@ public:
 
   void writeArithmetic(string command)
   {
-    outputFile << command << endl;
+    if (isArithSymbol(command))
+    {
+      outputFile << command << endl;
+    }
   }
 
   void writeLabel(string label)
@@ -65,9 +69,22 @@ public:
     outputFile << "return";
   }
 
+  void writeComment(string comment)
+  {
+    outputFile << comment << endl;
+  }
+
   void close()
   {
     outputFile.close();
+  }
+
+  bool isArithSymbol(const string &line)
+  {
+    if (find(ARITH_SYMBOLS.begin(), ARITH_SYMBOLS.end(), line) != ARITH_SYMBOLS.end())
+      return true;
+    else
+      return false;
   }
 };
 

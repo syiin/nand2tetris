@@ -74,8 +74,6 @@ public:
       // myTable.define(outputVarVec[2], outputVarVec[1], outputVarVec[0]);
     }
 
-    myTable.printTable();
-
     while (tokenString != "}")
     {
       compileSubroutineDec();
@@ -199,7 +197,6 @@ public:
     }
     loadNxtToken(); //=
     compileExpression();
-    myTable.printTable();
     myWriter.writePop(kind, idx); // pop segment idx
     loadNxtToken();               //;
   }
@@ -299,6 +296,7 @@ public:
     while (checkEndOfExpression())
     {
       outputString = compileTerm();
+
       if (tokenType == "integerConstant")
       {
         pushVec.push_back(outputString);
@@ -312,14 +310,11 @@ public:
 
     for (auto const &term : pushVec)
     {
-      cout << "term " << term << endl;
       myWriter.writePush("constant", term);
     }
 
     for (auto const &op : afterVec)
     {
-      cout << "OP" << op << endl;
-      // THE FUNCTION CALLS (ie. MEMORY.PEEK) ARE SOMEHOW BEING RECOGNISED AS SYMBOLS?
       myWriter.writeArithmetic(op);
     }
   }
@@ -335,10 +330,10 @@ public:
         outputString = outputString + tokenString; //class.method
         loadNxtToken();
       }
-      loadNxtToken(); // (
       int nArgs = compileExpressionList();
-      loadNxtToken(); // )
-      // myWriter.writeCall(outputString, nArgs);
+      myWriter.writeCall(outputString, nArgs);
+
+      cout << tokenString << endl;
     }
     else if (nextTokenString == "[")
     {
