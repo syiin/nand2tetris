@@ -8,7 +8,7 @@ class VMWriter
 private:
   string outputFileName;
   ofstream outputFile;
-  vector<string> ARITH_SYMBOLS = {"+", "-", "*", "/", ">", "<"};
+  vector<string> ARITH_SYMBOLS = {"add", "neg", "*", "/", ">", "<"};
 
 public:
   void startWriter(string fileName)
@@ -66,12 +66,12 @@ public:
 
   void writeReturn()
   {
-    outputFile << "return";
+    outputFile << "return \n\n";
   }
 
   void writeComment(string comment)
   {
-    outputFile << comment << endl;
+    outputFile << "\tCOMMENT:\t" << comment << endl;
   }
 
   void close()

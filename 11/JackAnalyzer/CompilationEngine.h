@@ -2,6 +2,7 @@
 #define COMPILATIONENG_H
 
 #include <map>
+#include <tuple>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -27,10 +28,12 @@ private:
 
   string tokenString;
   string tokenType;
+  int labelCounter;
 
 public:
   void loadEngine(string inputFileName)
   {
+    labelCounter = 0;
     myTokenizer.loadTokens(inputFileName);
     myWriter.startWriter(outputFileName);
     initArithOpsTable();
@@ -52,7 +55,10 @@ public:
     }
     else
     {
-      compileSubroutineDec();
+      while (tokenString != "}")
+      {
+        compileSubroutineDec();
+      }
     }
 
     loadNxtToken(); //}
@@ -60,9 +66,6 @@ public:
 
   void compileClassVarDec()
   {
-    cout << tokenString << endl;
-    cout << !checkIfFunction() << endl;
-
     while (!checkIfFunction())
     {
       // vector<string> outputVarVec;
@@ -91,8 +94,6 @@ public:
     loadNxtToken(); //(
 
     compileParameterList(outputString);
-
-    loadNxtToken(); // (
   }
 
   void compileParameterList(string functionName)
@@ -100,52 +101,48 @@ public:
     myTable.startSubroutine();
     string name;
     string type;
-    int paramIdx = 0;
+    vector<string> outputVarVec;
+
     int paramCount = 0;
+
+    loadNxtToken(); // argument type
 
     while (tokenString != ")")
     {
-      if (paramIdx == 0)
+      if (tokenString != ",")
       {
-        type = tokenString;
-        paramIdx++;
-      }
-      else if (paramIdx == 1)
-      {
-        name = tokenString;
-        paramIdx++;
-      }
-      else if (paramIdx == 2)
-      {
-        myTable.define(name, "argument", type);
-        paramIdx = 0;
+        outputVarVec.push_back(tokenString);
+        paramCount++;
       }
       loadNxtToken();
-      paramCount++;
     }
+
+    for (int i = 0; i < outputVarVec.size(); i = i + 2)
+    {
+      myTable.define(outputVarVec[i + 1], "argument", outputVarVec[i]);
+    }
+
     myWriter.writeFunction(functionName, paramCount / 2);
 
     loadNxtToken(); // )
-
     compileSubroutineBody();
+    loadNxtToken(); // }
   }
 
   void compileSubroutineBody()
   {
-
     loadNxtToken(); //{
-
     while (tokenString == "var")
     {
       compileVarDec();
     }
 
+    myTable.printTable();
+
     while (tokenString != "}")
     {
       compileStatements();
     }
-
-    loadNxtToken(); //}
   }
 
   void compileVarDec()
@@ -153,11 +150,21 @@ public:
     vector<string> outputVarVec;
     while (tokenString != ";")
     {
-      outputVarVec.push_back(tokenString);
+      if (tokenString != ",")
+        outputVarVec.push_back(tokenString);
       loadNxtToken();
     }
-    myTable.define(outputVarVec[2], outputVarVec[0], outputVarVec[1]);
+
+    for (int i = 2; i < outputVarVec.size(); i++)
+    {
+      myTable.define(outputVarVec[i], outputVarVec[0], outputVarVec[1]);
+      // cout << outputVarVec[0] << '\t';
+      // cout << outputVarVec[1] << '\t';
+      // cout << outputVarVec[i] << endl;
+    }
+
     loadNxtToken(); //;
+    // myWriter.writeComment(outputVarVec[2] + outputVarVec[0] + outputVarVec[1]);
   }
 
   void compileStatements()
@@ -180,7 +187,6 @@ public:
   void compileLet()
   {
     int idx;
-    string type;
     string kind;
     while (tokenString != "=")
     {
@@ -190,8 +196,8 @@ public:
         compileExpression();
         loadNxtToken(); // ]
       }
+
       idx = myTable.IndexOf(tokenString);
-      type = myTable.TypeOf(tokenString);
       kind = myTable.KindOf(tokenString);
       loadNxtToken();
     }
@@ -229,18 +235,23 @@ public:
 
   void compileWhile()
   {
-    outputFile << "<whileStatement>" << endl;
+    myWriter.writeLabel("L" + to_string(labelCounter)); // label L0
+    labelCounter++;
 
-    outputFile << createTagLoadNext(tokenType, tokenString)  //while
-               << createTagLoadNext(tokenType, tokenString); //(
+    loadNxtToken(); //while
+    loadNxtToken(); //(
 
     compileExpression();
+    myWriter.writeIf("L" + to_string(labelCounter)); //if-goto L1
 
-    outputFile << createTagLoadNext(tokenType, tokenString); //)
-    outputFile << createTagLoadNext(tokenType, tokenString); //{
+    loadNxtToken(); //)
+    loadNxtToken(); //{
+
     compileStatements();
-    outputFile << createTagLoadNext(tokenType, tokenString); //}
-    outputFile << "</whileStatement>" << endl;
+    loadNxtToken(); //}
+
+    myWriter.writeLabel("L" + to_string(labelCounter)); // label L1
+    labelCounter++;
   }
 
   void compileDo()
@@ -252,10 +263,12 @@ public:
 
     loadNxtToken();          //do
     className = tokenString; //Square
-    loadNxtToken();
-    loadNxtToken();           // .
-    methodName = tokenString; //main
-    loadNxtToken();           //(
+    loadNxtToken();          // .
+    loadNxtToken();          //main
+
+    methodName = tokenString;
+
+    loadNxtToken(); //(
 
     nArgs = compileExpressionList();
 
@@ -266,13 +279,11 @@ public:
 
   void compileReturn()
   {
-    outputFile << "<returnStatement>" << endl;
-    while (tokenString != ";")
-    {
-      outputFile << createTagLoadNext(tokenType, tokenString); //return xyz
-    }
-    outputFile << createTagLoadNext(tokenType, tokenString); //;
-    outputFile << "</returnStatement>" << endl;
+    loadNxtToken(); //return
+
+    compileExpression(); //push return value onto stack
+    myWriter.writeReturn();
+    loadNxtToken(); // ;
   }
 
   int compileExpressionList()
@@ -289,28 +300,48 @@ public:
 
   void compileExpression()
   {
+    tuple<string, string, string> outputTuple;
+    string expressionFrom;
     string outputString;
-    vector<string> pushVec;
+    string nArgs;
+
+    vector<tuple<string, string>> pushVec;
     vector<string> afterVec;
 
     while (checkEndOfExpression())
     {
-      outputString = compileTerm();
+      outputTuple = compileTerm();
 
-      if (tokenType == "integerConstant")
+      expressionFrom = get<0>(outputTuple);
+      outputString = get<1>(outputTuple);
+      nArgs = get<2>(outputTuple);
+
+      if (expressionFrom == "constant" || expressionFrom == "boolean")
       {
-        pushVec.push_back(outputString);
+        tuple<string, string> pushTuple;
+        pushTuple = make_tuple(expressionFrom, outputString);
+        pushVec.push_back(pushTuple);
       }
-      else if (tokenType == "symbol")
+      else if (expressionFrom == "arithOperator")
       {
         afterVec.push_back(outputString);
+      }
+      else if (expressionFrom == "methodCall")
+      {
+        myWriter.writeCall(outputString, stoi(nArgs));
+      }
+      else if (expressionFrom == "identifier")
+      {
+        tuple<string, string> pushTuple;
+        pushTuple = make_tuple(outputString, nArgs);
+        pushVec.push_back(pushTuple);
       }
       loadNxtToken();
     }
 
     for (auto const &term : pushVec)
     {
-      myWriter.writePush("constant", term);
+      myWriter.writePush(get<0>(term), get<1>(term));
     }
 
     for (auto const &op : afterVec)
@@ -319,10 +350,11 @@ public:
     }
   }
 
-  string compileTerm()
+  tuple<string, string, string> compileTerm()
   {
     string nextTokenString = myTokenizer.lookAheadString();
     string outputString;
+    tuple<string, string, string> outputTuple;
     if (nextTokenString == ".")
     {
       while (tokenString != "(")
@@ -331,9 +363,9 @@ public:
         loadNxtToken();
       }
       int nArgs = compileExpressionList();
-      myWriter.writeCall(outputString, nArgs);
 
-      cout << tokenString << endl;
+      outputTuple = make_tuple("methodCall", outputString, to_string(nArgs));
+      return outputTuple;
     }
     else if (nextTokenString == "[")
     {
@@ -356,12 +388,35 @@ public:
     else if (tokenType == "symbol" && tokenString != "(")
     {
       outputString = arithOpsTable[tokenString];
-      return outputString;
+      outputTuple = make_tuple("arithOperator", outputString, "");
+      return outputTuple;
     }
     else if (tokenType == "integerConstant")
     {
-      outputString = tokenString;
-      return outputString;
+      outputTuple = make_tuple("constant", tokenString, "");
+      return outputTuple;
+    }
+    else if (tokenType == "identifier")
+    {
+      int idx;
+      string type;
+      string kind;
+
+      idx = myTable.IndexOf(tokenString);
+      kind = myTable.KindOf(tokenString);
+
+      outputTuple = make_tuple("identifier", kind, to_string(idx));
+      return outputTuple;
+    }
+    else if (tokenString == "true")
+    {
+      outputTuple = make_tuple("boolean", "-1", "");
+      return outputTuple;
+    }
+    else if (tokenString == "false")
+    {
+      outputTuple = make_tuple("boolean", "0", "");
+      return outputTuple;
     }
   }
 
