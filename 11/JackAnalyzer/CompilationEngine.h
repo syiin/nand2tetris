@@ -159,6 +159,8 @@ public:
     for (int i = 2; i < outputVarVec.size(); i++)
     {
       myTable.define(outputVarVec[i], outputVarVec[0], outputVarVec[1]);
+      myWriter.writePush("constant", "0");
+      myWriter.writePop("local", to_string(myTable.IndexOf(outputVarVec[i])));
     }
 
     loadNxtToken(); //;
@@ -202,8 +204,8 @@ public:
     }
     loadNxtToken(); //=
     compileExpression();
-    myWriter.writePop(kind, idx); // pop segment idx
-    loadNxtToken();               //;
+    myWriter.writePop(kind, to_string(idx)); // pop segment idx
+    loadNxtToken();                          //;
   }
 
   void compileIf()
@@ -313,20 +315,29 @@ public:
 
   void compileExpression()
   {
+    vector<string> postFixOps;
     while (checkEndOfExpression())
     {
-      compileTerm();
-      loadNxtToken();
       if (tokenType == "symbol" && checkIsOps(tokenString))
       {
-        myWriter.writeArithmetic(arithOpsTable[tokenString]);
+        if (myTokenizer.lookBehindType() != "symbol")
+          postFixOps.push_back(arithOpsTable[tokenString]);
       }
+      compileTerm();
+      loadNxtToken();
+    }
+
+    for (auto const &op : postFixOps)
+    {
+      myWriter.writeArithmetic(op);
     }
   }
 
   void compileTerm()
   {
     string nextTokenString = myTokenizer.lookAheadString();
+    string nextTokenType = myTokenizer.lookAheadType();
+    string lookBehindType = myTokenizer.lookBehindType();
     string outputString = "";
 
     if (nextTokenString == ".") //this is a method call
@@ -344,7 +355,6 @@ public:
     {
       loadNxtToken(); //(
       compileExpression();
-      loadNxtToken(); //)
     }
     else if (tokenType == "integerConstant") //this is just an integer
     {
@@ -370,13 +380,11 @@ public:
     {
       myWriter.writePush("constant", "0");
     }
-    else if (tokenString == "~")
+    else if (tokenString == "-" && lookBehindType == "symbol")
     {
-      myWriter.writeArithmetic("not");
-    }
-    else if (tokenString == "-")
-    {
+      myWriter.writePush("constant", nextTokenString);
       myWriter.writeArithmetic("neg");
+      loadNxtToken();
     }
   }
 
@@ -517,6 +525,7 @@ public:
   {
     arithOpsTable["+"] = "add";
     arithOpsTable["-"] = "sub";
+    arithOpsTable["~"] = "not";
     arithOpsTable["*"] = "call Math.multiply 2";
     arithOpsTable["/"] = "call Math.divide 2";
     arithOpsTable[">"] = "gt";

@@ -8,7 +8,7 @@ class VMWriter
 private:
   string outputFileName;
   ofstream outputFile;
-  vector<string> ARITH_SYMBOLS = {"add", "neg", "not", "call Math.multiply 2", "call Math.divide 2", "gt", "lt", "sub"};
+  vector<string> ARITH_SYMBOLS = {"add", "neg", "not", "call Math.multiply 2", "call Math.divide 2", "gt", "lt", "sub", "and", "or", "eq"};
 
 public:
   void startWriter(string fileName)
@@ -26,9 +26,9 @@ public:
     outputFile << "push " << segment << " " << idx << endl;
   }
 
-  void writePop(string segment, int idx)
+  void writePop(string segment, string idx)
   {
-    outputFile << "pop " << segment << " " << to_string(idx) << endl;
+    outputFile << "pop " << segment << " " << idx << endl;
   }
 
   void writeArithmetic(string command)
