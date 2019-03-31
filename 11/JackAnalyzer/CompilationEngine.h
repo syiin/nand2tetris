@@ -137,8 +137,6 @@ public:
       compileVarDec();
     }
 
-    myTable.printTable();
-
     while (tokenString != "}")
     {
       compileStatements();
@@ -158,13 +156,9 @@ public:
     for (int i = 2; i < outputVarVec.size(); i++)
     {
       myTable.define(outputVarVec[i], outputVarVec[0], outputVarVec[1]);
-      // cout << outputVarVec[0] << '\t';
-      // cout << outputVarVec[1] << '\t';
-      // cout << outputVarVec[i] << endl;
     }
 
     loadNxtToken(); //;
-    // myWriter.writeComment(outputVarVec[2] + outputVarVec[0] + outputVarVec[1]);
   }
 
   void compileStatements()
@@ -209,48 +203,60 @@ public:
 
   void compileIf()
   {
-    outputFile << "<ifStatement>" << endl;
+    string L1 = "L" + to_string(labelCounter);
+    labelCounter++;
+    string L2 = "L" + to_string(labelCounter);
+    labelCounter++;
 
-    outputFile << createTagLoadNext(tokenType, tokenString); //if
-    outputFile << createTagLoadNext(tokenType, tokenString); //(
-
+    loadNxtToken(); //if
+    loadNxtToken(); //(
     compileExpression();
+    myWriter.writeArithmetic("not");
+    loadNxtToken(); // )
 
-    outputFile << createTagLoadNext(tokenType, tokenString); // )
-    outputFile << createTagLoadNext(tokenType, tokenString); // {
-
+    myWriter.writeIf(L1);
+    loadNxtToken(); // {
     compileStatements();
-    outputFile << createTagLoadNext(tokenType, tokenString); //}
+    loadNxtToken(); //}
+
+    myWriter.writeGoTo(L2);
 
     if (tokenString == "else") //handle else case
     {
-      outputFile << createTagLoadNext(tokenType, tokenString); //else
-      outputFile << createTagLoadNext(tokenType, tokenString); //{
+      loadNxtToken(); //else
+      loadNxtToken(); //{
+      myWriter.writeLabel(L1);
       while (tokenString != "}")
         compileStatements();
-      outputFile << createTagLoadNext(tokenType, tokenString); //}
+      loadNxtToken(); //}
     }
-    outputFile << "</ifStatement>" << endl;
+    myWriter.writeLabel(L2);
   }
 
   void compileWhile()
   {
-    myWriter.writeLabel("L" + to_string(labelCounter)); // label L0
+    string L1 = "L" + to_string(labelCounter);
+    labelCounter++;
+    string L2 = "L" + to_string(labelCounter);
+    labelCounter++;
+
+    myWriter.writeLabel(L1); // label L1
     labelCounter++;
 
     loadNxtToken(); //while
     loadNxtToken(); //(
 
     compileExpression();
-    myWriter.writeIf("L" + to_string(labelCounter)); //if-goto L1
+    myWriter.writeArithmetic("not");
+    myWriter.writeIf(L2); //if-goto L2
 
     loadNxtToken(); //)
     loadNxtToken(); //{
 
     compileStatements();
-    loadNxtToken(); //}
-
-    myWriter.writeLabel("L" + to_string(labelCounter)); // label L1
+    loadNxtToken();          //}
+    myWriter.writeGoTo(L1);  //goto L1
+    myWriter.writeLabel(L2); // label L2
     labelCounter++;
   }
 
@@ -369,21 +375,22 @@ public:
     }
     else if (nextTokenString == "[")
     {
-      outputFile << createTagLoadNext(tokenType, tokenString); //identifier
-      outputFile << createTagLoadNext(tokenType, tokenString); //[
+      loadNxtToken(); //identifier
+      loadNxtToken(); //[
       compileExpression();
-      outputFile << createTagLoadNext(tokenType, tokenString); //]
+      loadNxtToken(); //]
     }
     else if (tokenString == "(")
     {
-      outputFile << createTagLoadNext(tokenType, tokenString); //(
+      loadNxtToken(); //(
       compileExpression();
-      outputFile << createTagLoadNext(tokenType, tokenString); //)
+      loadNxtToken(); //)
     }
-    else if (myTokenizer.lookBehindString() == "(" && tokenType == "symbol")
+    else if (myTokenizer.lookBehindType() == "symbol" && tokenType == "symbol")
     {
-      outputFile << createTagLoadNext(tokenType, tokenString); //symbol
-      compileTerm();                                           //<term>identifier</term>
+      myWriter.writeArithmetic("neg"); //symbol
+      loadNxtToken();
+      compileTerm(); //<term>identifier</term>
     }
     else if (tokenType == "symbol" && tokenString != "(")
     {
@@ -410,12 +417,12 @@ public:
     }
     else if (tokenString == "true")
     {
-      outputTuple = make_tuple("boolean", "-1", "");
+      outputTuple = make_tuple("bool", "-1", "");
       return outputTuple;
     }
     else if (tokenString == "false")
     {
-      outputTuple = make_tuple("boolean", "0", "");
+      outputTuple = make_tuple("bool", "0", "");
       return outputTuple;
     }
   }
@@ -510,7 +517,11 @@ public:
   {
     arithOpsTable["+"] = "add";
     arithOpsTable["*"] = "call Math.multiply 2";
-    arithOpsTable["-"] = "neg";
+    arithOpsTable["/"] = "call Math.divide 2";
+    arithOpsTable["-"] = "sub";
+    arithOpsTable["~"] = "not";
+    arithOpsTable[">"] = "gt";
+    arithOpsTable["<"] = "lt";
   };
 };
 

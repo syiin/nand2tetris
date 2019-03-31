@@ -8,7 +8,7 @@ class VMWriter
 private:
   string outputFileName;
   ofstream outputFile;
-  vector<string> ARITH_SYMBOLS = {"add", "neg", "*", "/", ">", "<"};
+  vector<string> ARITH_SYMBOLS = {"add", "neg", "not", "call Math.multiply 2", "call Math.divide 2", "gt", "lt", "sub"};
 
 public:
   void startWriter(string fileName)
