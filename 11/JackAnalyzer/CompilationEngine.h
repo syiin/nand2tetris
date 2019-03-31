@@ -388,10 +388,12 @@ public:
     }
     else if (myTokenizer.lookBehindType() == "symbol" && tokenType == "symbol")
     {
-      myWriter.writeArithmetic("neg"); //symbol
-      loadNxtToken();
-      compileTerm(); //<term>identifier</term>
-    }
+      outputTuple = make_tuple("arithOperator", "neg", "");
+      return outputTuple;
+      // myWriter.writeArithmetic("neg"); //symbol
+      // loadNxtToken();
+      // compileTerm(); //<term>identifier</term>
+       }
     else if (tokenType == "symbol" && tokenString != "(")
     {
       outputString = arithOpsTable[tokenString];
