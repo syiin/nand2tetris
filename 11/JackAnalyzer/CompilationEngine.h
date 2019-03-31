@@ -20,6 +20,7 @@ private:
   ofstream outputFile;
   string outputFileName;
   string currentClassName;
+  string currentFunctionName;
 
   Tokenizer myTokenizer;
   VMWriter myWriter;
@@ -122,7 +123,7 @@ public:
       myTable.define(outputVarVec[i + 1], "argument", outputVarVec[i]);
     }
 
-    myWriter.writeFunction(functionName, paramCount / 2);
+    currentFunctionName = functionName;
 
     loadNxtToken(); // )
     compileSubroutineBody();
@@ -132,10 +133,12 @@ public:
   void compileSubroutineBody()
   {
     loadNxtToken(); //{
+    int lclVar = 0;
     while (tokenString == "var")
     {
-      compileVarDec();
+      lclVar = lclVar + compileVarDec();
     }
+    myWriter.writeFunction(currentFunctionName, lclVar);
 
     while (tokenString != "}")
     {
@@ -143,7 +146,7 @@ public:
     }
   }
 
-  void compileVarDec()
+  int compileVarDec()
   {
     vector<string> outputVarVec;
     while (tokenString != ";")
@@ -159,6 +162,8 @@ public:
     }
 
     loadNxtToken(); //;
+
+    return outputVarVec.size() - 2;
   }
 
   void compileStatements()
@@ -211,8 +216,9 @@ public:
     loadNxtToken(); //if
     loadNxtToken(); //(
     compileExpression();
-    myWriter.writeArithmetic("not");
     loadNxtToken(); // )
+
+    myWriter.writeArithmetic("not");
 
     myWriter.writeIf(L1);
     loadNxtToken(); // {
@@ -228,6 +234,7 @@ public:
       myWriter.writeLabel(L1);
       while (tokenString != "}")
         compileStatements();
+
       loadNxtToken(); //}
     }
     myWriter.writeLabel(L2);
@@ -306,62 +313,23 @@ public:
 
   void compileExpression()
   {
-    tuple<string, string, string> outputTuple;
-    string expressionFrom;
-    string outputString;
-    string nArgs;
-
-    vector<tuple<string, string>> pushVec;
-    vector<string> afterVec;
-
     while (checkEndOfExpression())
     {
-      outputTuple = compileTerm();
-
-      expressionFrom = get<0>(outputTuple);
-      outputString = get<1>(outputTuple);
-      nArgs = get<2>(outputTuple);
-
-      if (expressionFrom == "constant" || expressionFrom == "boolean")
-      {
-        tuple<string, string> pushTuple;
-        pushTuple = make_tuple(expressionFrom, outputString);
-        pushVec.push_back(pushTuple);
-      }
-      else if (expressionFrom == "arithOperator")
-      {
-        afterVec.push_back(outputString);
-      }
-      else if (expressionFrom == "methodCall")
-      {
-        myWriter.writeCall(outputString, stoi(nArgs));
-      }
-      else if (expressionFrom == "identifier")
-      {
-        tuple<string, string> pushTuple;
-        pushTuple = make_tuple(outputString, nArgs);
-        pushVec.push_back(pushTuple);
-      }
+      compileTerm();
       loadNxtToken();
-    }
-
-    for (auto const &term : pushVec)
-    {
-      myWriter.writePush(get<0>(term), get<1>(term));
-    }
-
-    for (auto const &op : afterVec)
-    {
-      myWriter.writeArithmetic(op);
+      if (tokenType == "symbol" && checkIsOps(tokenString))
+      {
+        myWriter.writeArithmetic(arithOpsTable[tokenString]);
+      }
     }
   }
 
-  tuple<string, string, string> compileTerm()
+  void compileTerm()
   {
     string nextTokenString = myTokenizer.lookAheadString();
-    string outputString;
-    tuple<string, string, string> outputTuple;
-    if (nextTokenString == ".")
+    string outputString = "";
+
+    if (nextTokenString == ".") //this is a method call
     {
       while (tokenString != "(")
       {
@@ -370,15 +338,7 @@ public:
       }
       int nArgs = compileExpressionList();
 
-      outputTuple = make_tuple("methodCall", outputString, to_string(nArgs));
-      return outputTuple;
-    }
-    else if (nextTokenString == "[")
-    {
-      loadNxtToken(); //identifier
-      loadNxtToken(); //[
-      compileExpression();
-      loadNxtToken(); //]
+      myWriter.writeCall(outputString, nArgs);
     }
     else if (tokenString == "(")
     {
@@ -386,26 +346,11 @@ public:
       compileExpression();
       loadNxtToken(); //)
     }
-    else if (myTokenizer.lookBehindType() == "symbol" && tokenType == "symbol")
+    else if (tokenType == "integerConstant") //this is just an integer
     {
-      outputTuple = make_tuple("arithOperator", "neg", "");
-      return outputTuple;
-      // myWriter.writeArithmetic("neg"); //symbol
-      // loadNxtToken();
-      // compileTerm(); //<term>identifier</term>
-       }
-    else if (tokenType == "symbol" && tokenString != "(")
-    {
-      outputString = arithOpsTable[tokenString];
-      outputTuple = make_tuple("arithOperator", outputString, "");
-      return outputTuple;
+      myWriter.writePush("constant", tokenString);
     }
-    else if (tokenType == "integerConstant")
-    {
-      outputTuple = make_tuple("constant", tokenString, "");
-      return outputTuple;
-    }
-    else if (tokenType == "identifier")
+    else if (tokenType == "identifier") //this is a variable
     {
       int idx;
       string type;
@@ -414,18 +359,24 @@ public:
       idx = myTable.IndexOf(tokenString);
       kind = myTable.KindOf(tokenString);
 
-      outputTuple = make_tuple("identifier", kind, to_string(idx));
-      return outputTuple;
+      myWriter.writePush(kind, to_string(idx));
     }
     else if (tokenString == "true")
     {
-      outputTuple = make_tuple("bool", "-1", "");
-      return outputTuple;
+      myWriter.writePush("constant", "1");
+      myWriter.writeArithmetic("neg");
     }
     else if (tokenString == "false")
     {
-      outputTuple = make_tuple("bool", "0", "");
-      return outputTuple;
+      myWriter.writePush("constant", "0");
+    }
+    else if (tokenString == "~")
+    {
+      myWriter.writeArithmetic("not");
+    }
+    else if (tokenString == "-")
+    {
+      myWriter.writeArithmetic("neg");
     }
   }
 
@@ -474,6 +425,41 @@ public:
     myTokenizer.advance();
   }
 
+  void loadPrevToken()
+  {
+    myTokenizer.pointerBack();
+    tokenType = myTokenizer.tokenType();
+    if (myTokenizer.tokenType() == "keyword")
+    {
+      tokenString = myTokenizer.keyWord();
+    }
+    else if (myTokenizer.tokenType() == "symbol")
+    {
+      tokenString = myTokenizer.symbol();
+    }
+    else if (myTokenizer.tokenType() == "stringConstant")
+    {
+      string tempString = myTokenizer.stringVal();
+      int start = myTokenizer.stringVal().find('"') + 1;
+      int end = myTokenizer.stringVal().find_last_of('"') - 1;
+      tempString = tempString.substr(start, end);
+
+      tokenString = tempString;
+    }
+    else if (myTokenizer.tokenType() == "integerConstant")
+    {
+      tokenString = myTokenizer.intVal();
+    }
+    else if (myTokenizer.tokenType() == "identifier")
+    {
+      tokenString = myTokenizer.identifier();
+    }
+    else
+    {
+      cout << "UNKNOWN WORD" << endl;
+    }
+  }
+
   string getStringLoadNext()
   {
     string outputString = tokenString;
@@ -514,17 +500,36 @@ public:
     return (tokenString != "," && tokenString != ";" && tokenString != ")" && tokenString != "]");
   }
 
+  bool checkIsOps(string key)
+  {
+    for (auto const &symbol : arithOpsTable)
+    {
+      if (symbol.first == key)
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
   //INITIALIZERS
   void initArithOpsTable()
   {
     arithOpsTable["+"] = "add";
+    arithOpsTable["-"] = "sub";
     arithOpsTable["*"] = "call Math.multiply 2";
     arithOpsTable["/"] = "call Math.divide 2";
-    arithOpsTable["-"] = "sub";
-    arithOpsTable["~"] = "not";
     arithOpsTable[">"] = "gt";
     arithOpsTable["<"] = "lt";
+    arithOpsTable["="] = "eq";
+    arithOpsTable["&"] = "and";
+    arithOpsTable["|"] = "or";
   };
 };
 
 #endif
+
+/*
+
+ 
+*/

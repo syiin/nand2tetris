@@ -123,29 +123,10 @@ public:
     return stringTokens[tokenCount - 2];
   }
 
-  string lookBehindType()
+  void pointerBack()
   {
-    string token = stringTokens[tokenCount - 2];
-    if (isKeyword(token))
-    {
-      return "keyword";
-    }
-    else if (isSymbol(token))
-    {
-      return "symbol";
-    }
-    else if (isString(token))
-    {
-      return "stringConstant";
-    }
-    else if (isNumber(token))
-    {
-      return "integerConstant";
-    }
-    else
-    {
-      return "identifier";
-    }
+    if (tokenCount > 0)
+      tokenCount--;
   }
 
   //TOKEN MANIPULATION
