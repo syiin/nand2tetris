@@ -11,12 +11,18 @@ struct SymbolEntry
   int idx;
 };
 
+struct FunctionEntry
+{
+  string returnType;
+  string functionType;
+};
+
 class SymbolTable
 {
 private:
   map<string, SymbolEntry> classTable;
   map<string, SymbolEntry> subroutineTable;
-  map<string, string> functionTable;
+  map<string, FunctionEntry> functionTable;
 
 public:
   SymbolTable()
@@ -134,14 +140,22 @@ public:
     return newEntry;
   }
 
-  void addFunction(string name, string returnType)
+  void addFunction(string name, string functionType, string returnType)
   {
-    functionTable[name] = returnType;
+    FunctionEntry newEntry;
+    newEntry.functionType = functionType;
+    newEntry.returnType = returnType;
+    functionTable[name] = newEntry;
   }
 
   string getFunctionRtnType(string name)
   {
-    return functionTable[name];
+    return functionTable[name].returnType;
+  }
+
+  string getFunctionType(string name)
+  {
+    return functionTable[name].functionType;
   }
 
   void printTable()
@@ -176,12 +190,14 @@ public:
 
     cout << "FUNCTION TABLE:" << endl
          << "NAME \t"
-         << "TYPE \t"
+         << "RETURNTYPE \t"
+         << "FUNCTIONTYPE \t"
          << endl;
     for (auto const &symbol : functionTable)
     {
       cout << symbol.first << '\t'
-           << symbol.second << '\t'
+           << symbol.second.returnType << '\t'
+           << symbol.second.functionType << '\t'
            << endl;
     }
   }

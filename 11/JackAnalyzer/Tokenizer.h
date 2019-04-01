@@ -15,7 +15,6 @@ class Tokenizer
 
 private:
   int tokenCount;
-  vector<char> charTokens;
   vector<string> stringTokens;
 
   vector<string> TOKEN_KEYWORDS = {"class", "method", "function", "constructor", "int",
@@ -212,7 +211,7 @@ public:
 
   void resetTokenizer()
   {
-    charTokens.clear();
+    stringTokens.clear();
     tokenCount = 0;
   }
 

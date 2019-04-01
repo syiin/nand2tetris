@@ -40,6 +40,7 @@ public:
     initArithOpsTable();
     // myTokenizer.printTokens();
     compileClass();
+    myWriter.close();
   }
 
   void compileClass()
@@ -67,15 +68,9 @@ public:
 
   void compileClassVarDec()
   {
-    while (!checkIfFunction())
+    while (tokenString == "field")
     {
-      // vector<string> outputVarVec;
-      // while (tokenString != ";")
-      // {
-      //   outputVarVec.push_back(tokenString);
-      //   loadNxtToken();
-      // }
-      // myTable.define(outputVarVec[2], outputVarVec[1], outputVarVec[0]);
+      compileVarDec();
     }
 
     while (tokenString != "}")
@@ -88,13 +83,16 @@ public:
   {
     string outputString;
     string rtnType;
-    loadNxtToken(); //return type
-    rtnType = tokenString;
+    string functionType;
+
+    functionType = tokenString; // function | method | constructor
+    loadNxtToken();
+    rtnType = tokenString; //return type int | char | identifier
 
     loadNxtToken(); //identifier
     outputString = currentClassName + "." + tokenString;
 
-    myTable.addFunction(outputString, rtnType);
+    myTable.addFunction(outputString, functionType, rtnType);
     currentFunctionName = outputString;
 
     loadNxtToken(); //(
@@ -122,10 +120,17 @@ public:
       loadNxtToken();
     }
 
-    for (int i = 0; i < outputVarVec.size(); i = i + 2)
+    if (myTable.getFunctionType(currentFunctionName) == "method") //handle method
+    {
+      myTable.define("this", "argument", "0");
+    }
+
+    for (int i = 0; i < outputVarVec.size(); i = i + 2) //handle function | constructor
     {
       myTable.define(outputVarVec[i + 1], "argument", outputVarVec[i]);
     }
+
+    myTable.printTable();
 
     loadNxtToken(); // )
     compileSubroutineBody();
@@ -272,22 +277,19 @@ public:
   void compileDo()
   {
     string outputString;
-    string className;
+    string className = "";
     string methodName;
     int nArgs;
 
-    loadNxtToken();          //do
-    className = tokenString; //Square
-    loadNxtToken();          // .
-    loadNxtToken();          //main
-
-    methodName = tokenString;
-
-    loadNxtToken(); //(
+    loadNxtToken();
+    while (tokenString != "(")
+    {
+      className = className + tokenString; // class.functionName | functionName
+      loadNxtToken();
+    }
 
     nArgs = compileExpressionList();
-
-    myWriter.writeCall(className + "." + methodName, nArgs);
+    myWriter.writeCall(className, nArgs);
     loadNxtToken(); //)
     loadNxtToken(); //;
   }
@@ -315,6 +317,7 @@ public:
   int compileExpressionList()
   {
     int nArgs = 0;
+
     while (tokenString != ")" && tokenString != ";")
     {
       loadNxtToken(); // ,
@@ -326,17 +329,10 @@ public:
 
   void compileExpression()
   {
-    vector<string> postFixOps;
-
     while (checkEndOfExpression())
     {
       compileTerm(); //compile any terms inside
       loadNxtToken();
-    }
-
-    for (auto const &op : postFixOps)
-    {
-      myWriter.writeArithmetic(op);
     }
   }
 
@@ -346,6 +342,9 @@ public:
     string nextTokenType = myTokenizer.lookAheadType();
     string lookBehindType = myTokenizer.lookBehindType();
     string outputString = "";
+
+    // cout << tokenString << endl;
+    // cout << nextTokenString << endl;
 
     if (nextTokenString == ".") //this is a method call
     {
