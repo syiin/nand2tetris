@@ -1,5 +1,3 @@
-push constant 0
-pop local 0
 function Main.main 1
 push constant 8001
 push constant 16
@@ -11,14 +9,10 @@ call Memory.peek 1
 pop local 0
 push local 0
 call Main.convert 1
+push constant 0
 return 
 
-push constant 0
-pop local 0
-push constant 0
-pop local 1
-push constant 0
-pop local 2
+pop temp 0
 function Main.convert 3
 push constant 1
 neg
@@ -65,8 +59,10 @@ pop local 2
 label L4
 goto L0
 label L1
+push constant 0
 return 
 
+pop temp 0
 function Main.nextMask 0
 push argument 0
 push constant 0
@@ -104,5 +100,7 @@ add
 pop argument 0
 goto L10
 label L11
+push constant 0
 return 
 
+pop temp 0

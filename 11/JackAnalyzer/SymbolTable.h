@@ -16,6 +16,7 @@ class SymbolTable
 private:
   map<string, SymbolEntry> classTable;
   map<string, SymbolEntry> subroutineTable;
+  map<string, string> functionTable;
 
 public:
   SymbolTable()
@@ -133,6 +134,16 @@ public:
     return newEntry;
   }
 
+  void addFunction(string name, string returnType)
+  {
+    functionTable[name] = returnType;
+  }
+
+  string getFunctionRtnType(string name)
+  {
+    return functionTable[name];
+  }
+
   void printTable()
   {
     cout << "CLASS TABLE:" << endl
@@ -160,6 +171,17 @@ public:
            << symbol.second.type << '\t'
            << symbol.second.kind << '\t'
            << symbol.second.idx << '\t'
+           << endl;
+    }
+
+    cout << "FUNCTION TABLE:" << endl
+         << "NAME \t"
+         << "TYPE \t"
+         << endl;
+    for (auto const &symbol : functionTable)
+    {
+      cout << symbol.first << '\t'
+           << symbol.second << '\t'
            << endl;
     }
   }

@@ -87,17 +87,21 @@ public:
   void compileSubroutineDec()
   {
     string outputString;
-
+    string rtnType;
     loadNxtToken(); //return type
+    rtnType = tokenString;
+
     loadNxtToken(); //identifier
     outputString = currentClassName + "." + tokenString;
 
-    loadNxtToken(); //(
+    myTable.addFunction(outputString, rtnType);
+    currentFunctionName = outputString;
 
-    compileParameterList(outputString);
+    loadNxtToken(); //(
+    compileParameterList();
   }
 
-  void compileParameterList(string functionName)
+  void compileParameterList()
   {
     myTable.startSubroutine();
     string name;
@@ -122,8 +126,6 @@ public:
     {
       myTable.define(outputVarVec[i + 1], "argument", outputVarVec[i]);
     }
-
-    currentFunctionName = functionName;
 
     loadNxtToken(); // )
     compileSubroutineBody();
@@ -159,8 +161,6 @@ public:
     for (int i = 2; i < outputVarVec.size(); i++)
     {
       myTable.define(outputVarVec[i], outputVarVec[0], outputVarVec[1]);
-      myWriter.writePush("constant", "0");
-      myWriter.writePop("local", to_string(myTable.IndexOf(outputVarVec[i])));
     }
 
     loadNxtToken(); //;
@@ -295,10 +295,20 @@ public:
   void compileReturn()
   {
     loadNxtToken(); //return
+    string currentFunctionRtnType = myTable.getFunctionRtnType(currentFunctionName);
+    if (currentFunctionRtnType == "void")
+    {
+      myWriter.writePush("constant", "0");
+      myWriter.writeReturn();
+      myWriter.writePop("temp", "0");
+    }
+    else
+    {
+      compileExpression(); //push return value onto stack
+      myWriter.writeReturn();
+    }
 
-    compileExpression(); //push return value onto stack
-    myWriter.writeReturn();
-    loadNxtToken(); // ;
+        loadNxtToken(); // ;
   }
 
   int compileExpressionList()
@@ -318,12 +328,12 @@ public:
     vector<string> postFixOps;
     while (checkEndOfExpression())
     {
-      if (tokenType == "symbol" && checkIsOps(tokenString))
+      if (tokenType == "symbol" && checkIsOps(tokenString)) //push only ops
       {
-        if (myTokenizer.lookBehindType() != "symbol")
+        if (myTokenizer.lookBehindType() != "symbol") //differientiate between neg and sub
           postFixOps.push_back(arithOpsTable[tokenString]);
       }
-      compileTerm();
+      compileTerm(); //compile any terms inside
       loadNxtToken();
     }
 
