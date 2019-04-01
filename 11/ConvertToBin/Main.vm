@@ -69,6 +69,7 @@ pop temp 0
 function Main.nextMask 0
 push argument 0
 push constant 0
+eq
 not
 if-goto L8
 push constant 1

@@ -330,11 +330,6 @@ public:
 
     while (checkEndOfExpression())
     {
-      if (tokenType == "symbol" && checkIsOps(tokenString)) //push only ops
-      {
-        if (myTokenizer.lookBehindType() != "symbol") //differientiate between neg and sub
-          postFixOps.push_back(arithOpsTable[tokenString]);
-      }
       compileTerm(); //compile any terms inside
       loadNxtToken();
     }
@@ -368,10 +363,6 @@ public:
       loadNxtToken(); //(
       compileExpression();
     }
-    else if (tokenType == "integerConstant") //this is just an integer
-    {
-      myWriter.writePush("constant", tokenString);
-    }
     else if (tokenType == "identifier") //this is a variable
     {
       int idx;
@@ -398,22 +389,23 @@ public:
       myWriter.writeArithmetic("neg");
       loadNxtToken();
     }
-    else if (tokenString == "=" && lookBehindType == "symbol")
-    {
-      myWriter.writePush("constant", nextTokenString);
-      myWriter.writeArithmetic("eq");
-      loadNxtToken();
-    }
     else if (tokenString == "~" && lookBehindType == "symbol")
     {
       loadNxtToken(); // (
       compileExpression();
       loadPrevToken();
-
-      // cout << tokenString << endl;
-      // loadNxtToken();
-      // cout << tokenString << endl;
       myWriter.writeArithmetic("not");
+    }
+    else if (tokenType == "integerConstant") //this is just an integer
+    {
+      myWriter.writePush("constant", tokenString);
+    }
+    else if (tokenType == "symbol" && checkIfOps(tokenString))
+    {
+      string opCmd = arithOpsTable[tokenString];
+      loadNxtToken();
+      compileTerm();
+      myWriter.writeArithmetic(opCmd);
     }
   }
 
@@ -537,7 +529,7 @@ public:
     return (tokenString != "," && tokenString != ";" && tokenString != ")" && tokenString != "]");
   }
 
-  bool checkIsOps(string key)
+  bool checkIfOps(string key)
   {
     for (auto const &symbol : arithOpsTable)
     {
@@ -554,12 +546,11 @@ public:
   {
     arithOpsTable["+"] = "add";
     arithOpsTable["-"] = "sub";
-    // arithOpsTable["~"] = "not";
     arithOpsTable["*"] = "call Math.multiply 2";
     arithOpsTable["/"] = "call Math.divide 2";
     arithOpsTable[">"] = "gt";
     arithOpsTable["<"] = "lt";
-    // arithOpsTable["="] = "eq";
+    arithOpsTable["="] = "eq";
     arithOpsTable["&"] = "and";
     arithOpsTable["|"] = "or";
   };
