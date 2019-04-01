@@ -296,7 +296,8 @@ public:
   {
     loadNxtToken(); //return
     string currentFunctionRtnType = myTable.getFunctionRtnType(currentFunctionName);
-    if (currentFunctionRtnType == "void")
+
+    if (currentFunctionRtnType == "void") //handle void vs other return types
     {
       myWriter.writePush("constant", "0");
       myWriter.writeReturn();
@@ -308,7 +309,7 @@ public:
       myWriter.writeReturn();
     }
 
-        loadNxtToken(); // ;
+    loadNxtToken(); // ;
   }
 
   int compileExpressionList()
@@ -326,6 +327,7 @@ public:
   void compileExpression()
   {
     vector<string> postFixOps;
+
     while (checkEndOfExpression())
     {
       if (tokenType == "symbol" && checkIsOps(tokenString)) //push only ops
@@ -395,6 +397,23 @@ public:
       myWriter.writePush("constant", nextTokenString);
       myWriter.writeArithmetic("neg");
       loadNxtToken();
+    }
+    else if (tokenString == "=" && lookBehindType == "symbol")
+    {
+      myWriter.writePush("constant", nextTokenString);
+      myWriter.writeArithmetic("eq");
+      loadNxtToken();
+    }
+    else if (tokenString == "~" && lookBehindType == "symbol")
+    {
+      loadNxtToken(); // (
+      compileExpression();
+      loadPrevToken();
+
+      // cout << tokenString << endl;
+      // loadNxtToken();
+      // cout << tokenString << endl;
+      myWriter.writeArithmetic("not");
     }
   }
 
@@ -535,12 +554,12 @@ public:
   {
     arithOpsTable["+"] = "add";
     arithOpsTable["-"] = "sub";
-    arithOpsTable["~"] = "not";
+    // arithOpsTable["~"] = "not";
     arithOpsTable["*"] = "call Math.multiply 2";
     arithOpsTable["/"] = "call Math.divide 2";
     arithOpsTable[">"] = "gt";
     arithOpsTable["<"] = "lt";
-    arithOpsTable["="] = "eq";
+    // arithOpsTable["="] = "eq";
     arithOpsTable["&"] = "and";
     arithOpsTable["|"] = "or";
   };

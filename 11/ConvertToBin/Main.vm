@@ -32,11 +32,14 @@ push local 1
 push constant 16
 gt
 not
+not
 if-goto L3
 push argument 0
 push local 0
 and
 push constant 0
+eq
+not
 not
 if-goto L5
 push constant 8000
@@ -66,7 +69,6 @@ pop temp 0
 function Main.nextMask 0
 push argument 0
 push constant 0
-eq
 not
 if-goto L8
 push constant 1
