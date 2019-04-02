@@ -54,7 +54,20 @@ public:
 
     if (!checkIfFunction())
     {
-      compileClassVarDec();
+      vector<string> outputVarVec;
+      while (tokenString != ";")
+      {
+        if (tokenString != ",")
+          outputVarVec.push_back(tokenString);
+        loadNxtToken();
+      }
+
+      for (int i = 2; i < outputVarVec.size(); i++)
+      {
+        myTable.define(outputVarVec[i], outputVarVec[0], outputVarVec[1]); //field int x,y >> (x|y, var, int)
+      }
+
+      loadNxtToken(); //;
     }
     else
     {
