@@ -107,27 +107,26 @@ public:
     string type;
     vector<string> outputVarVec;
 
-    int paramCount = 0;
+    int i = 0;
 
     loadNxtToken(); // argument type
 
     if (myTable.getFunctionType(currentFunctionName) == "method") //handle method
     {
-      myWriter.writePush("argument", "0");
-      myWriter.writePop("pointer", "0");
+      myTable.define("this", "argument", myTable.getFunctionType(currentFunctionName));
+      i = 2;
     }
 
-    while (tokenString != ")")
+    while (tokenString != ")") //push back only types and argument names
     {
       if (tokenString != ",")
       {
         outputVarVec.push_back(tokenString);
-        paramCount++;
       }
       loadNxtToken();
     }
 
-    for (int i = 0; i < outputVarVec.size(); i = i + 2) //handle function | constructor
+    for (; i < outputVarVec.size(); i = i + 2) //handle function | constructor
     {
       myTable.define(outputVarVec[i + 1], "argument", outputVarVec[i]);
     }
@@ -150,8 +149,14 @@ public:
 
     if (myTable.getFunctionType(currentFunctionName) == "constructor")
     {
-      myWriter.writePush("constant", to_string(myTable.FieldCount()));
+      myWriter.writePush("constant", to_string(myTable.FieldCount() + lclVar));
       myWriter.writeCall("Memory.alloc", "1");
+      myWriter.writePop("pointer", "0");
+    }
+
+    if (myTable.getFunctionType(currentFunctionName) == "method")
+    {
+      myWriter.writePush("argument", "0");
       myWriter.writePop("pointer", "0");
     }
 
@@ -295,47 +300,56 @@ public:
   {
     string outputString = "";
     string className = "";
-    string methodName;
-    int nArgs;
+
+    int nArgs = 0;
 
     loadNxtToken();
+
+    //handle defined class instance call
     if (myTable.subroutineTableContains(tokenString) || myTable.classTableContains(tokenString))
     {
       className = myTable.TypeOf(tokenString);
+      string classKind = myTable.KindOf(tokenString);
+      string classIdx = to_string(myTable.IndexOf(tokenString));
+
+      myWriter.writePush(classKind, classIdx);
+      nArgs++;
       outputString = className;
+
       loadNxtToken();
 
       while (tokenString != "(")
       {
-        outputString = outputString + tokenString; // classInstance.methodName
+        outputString = outputString + tokenString; //  className. + methodName
         loadNxtToken();
       }
     }
-    else
+    else //handle function calls from elsewhere or internal method calls
     {
       while (tokenString != "(")
       {
+        if (tokenString == ".")
+        {
+          className = myTokenizer.lookBehindString();
+        }
         outputString = outputString + tokenString; // class.functionName | functionName
+
         loadNxtToken();
       }
     }
 
-    if (myTable.getFunctionType(outputString) == "method") //push the relevant THIS onto arg 0
+    if (className == "") //handle if internal method
     {
-      if (myTable.subroutineTableContains(tokenString) || myTable.classTableContains(tokenString))
-      {
-        myWriter.writePush(myTable.KindOf(className), to_string(myTable.IndexOf(className)));
-        myWriter.writePop("argument", "0");
-      }
-      else
-      {
-        myWriter.writePush("this", "0");
-        myWriter.writePop("argument", "0");
-      }
+      myWriter.writePush("pointer", "0");
+      outputString = currentClassName + "." + outputString;
+      nArgs++;
     }
 
-    nArgs = compileExpressionList();
+    nArgs = nArgs + compileExpressionList();
     myWriter.writeCall(outputString, to_string(nArgs));
+
+    myWriter.writePop("temp", "0");
+
     loadNxtToken(); //)
     loadNxtToken(); //;
   }
@@ -343,20 +357,16 @@ public:
   void compileReturn()
   {
     loadNxtToken(); //return
-    string currentFunctionRtnType = myTable.getFunctionRtnType(currentFunctionName);
 
-    if (currentFunctionRtnType == "void") //handle void vs other return types
+    if (myTable.getFunctionRtnType(currentFunctionName) == "void") //handle void
     {
       myWriter.writePush("constant", "0");
       myWriter.writeReturn();
-      myWriter.writePop("temp", "0");
-      // myWriter.writeBreak();
     }
     else
     {
       compileExpression(); //push return value onto stack
       myWriter.writeReturn();
-      // myWriter.writeBreak();
     }
 
     loadNxtToken(); // ;
@@ -366,11 +376,13 @@ public:
   {
     int nArgs = 0;
 
-    while (tokenString != ")" && tokenString != ";")
+    // while (tokenString != ")" && tokenString != ";")
+    while (tokenString != ")")
     {
       loadNxtToken(); // ,
+      if (tokenString != ")")
+        nArgs++;
       compileExpression();
-      nArgs++;
     }
     return nArgs;
   }
@@ -389,10 +401,8 @@ public:
     string nextTokenString = myTokenizer.lookAheadString();
     string nextTokenType = myTokenizer.lookAheadType();
     string lookBehindType = myTokenizer.lookBehindType();
+    string lookBehindString = myTokenizer.lookBehindString();
     string outputString = "";
-
-    // cout << tokenString << endl;
-    // cout << nextTokenString << endl;
 
     if (nextTokenString == ".") //this is a method call
     {
@@ -421,8 +431,6 @@ public:
 
       if (kind == "field")
       {
-        myWriter.writePush("argument", "0");
-        myWriter.writePop("pointer", "0");
         myWriter.writePush("this", to_string(idx));
       }
       else
@@ -443,7 +451,7 @@ public:
     {
       myWriter.writePush("constant", "0");
     }
-    else if (tokenString == "-" && lookBehindType == "symbol")
+    else if (tokenString == "-" && lookBehindString == "(" && lookBehindString == "[" && lookBehindString == "=")
     {
       myWriter.writePush("constant", nextTokenString);
       myWriter.writeArithmetic("neg");

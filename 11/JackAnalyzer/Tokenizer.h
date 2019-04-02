@@ -77,7 +77,7 @@ public:
   {
     if (tokenType() == "symbol")
     {
-      return sanitiseSymbolCharacter(stringTokens[tokenCount]);
+      return stringTokens[tokenCount];
     }
   }
 
@@ -332,10 +332,7 @@ public:
 
   string sanitiseSymbolCharacter(string character)
   {
-    if (character == "<")
-      return "&lt;";
-    else
-      return character;
+    return character;
   }
 
   string removeCommentsFromString(string line)
