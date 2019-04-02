@@ -78,6 +78,11 @@ public:
     return count;
   }
 
+  int FieldCount()
+  {
+    return VarCount(classTable, "field");
+  }
+
   string KindOf(string name)
   {
     if (checkIfContainsName(subroutineTable, name))

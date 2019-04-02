@@ -111,6 +111,12 @@ public:
 
     loadNxtToken(); // argument type
 
+    if (myTable.getFunctionType(currentFunctionName) == "method") //handle method
+    {
+      myWriter.writePush("argument", "0");
+      myWriter.writePop("pointer", "0");
+    }
+
     while (tokenString != ")")
     {
       if (tokenString != ",")
@@ -140,16 +146,11 @@ public:
       lclVar = lclVar + compileVarDec();
     }
 
-    if (myTable.getFunctionType(currentFunctionName) == "method") //handle method
-    {
-      myTable.define("this", "argument", "0");
-    }
-
     myWriter.writeFunction(currentFunctionName, lclVar);
 
     if (myTable.getFunctionType(currentFunctionName) == "constructor")
     {
-      myWriter.writePush("constant", to_string(lclVar));
+      myWriter.writePush("constant", to_string(myTable.FieldCount()));
       myWriter.writeCall("Memory.alloc", "1");
       myWriter.writePop("pointer", "0");
     }
@@ -292,7 +293,7 @@ public:
 
   void compileDo()
   {
-    string outputString;
+    string outputString = "";
     string className = "";
     string methodName;
     int nArgs;
@@ -301,11 +302,12 @@ public:
     if (myTable.subroutineTableContains(tokenString) || myTable.classTableContains(tokenString))
     {
       className = myTable.TypeOf(tokenString);
+      outputString = className;
       loadNxtToken();
 
       while (tokenString != "(")
       {
-        className = className + tokenString; // classInstance.methodName
+        outputString = outputString + tokenString; // classInstance.methodName
         loadNxtToken();
       }
     }
@@ -313,13 +315,27 @@ public:
     {
       while (tokenString != "(")
       {
-        className = className + tokenString; // class.functionName | functionName
+        outputString = outputString + tokenString; // class.functionName | functionName
         loadNxtToken();
       }
     }
 
+    if (myTable.getFunctionType(outputString) == "method") //push the relevant THIS onto arg 0
+    {
+      if (myTable.subroutineTableContains(tokenString) || myTable.classTableContains(tokenString))
+      {
+        myWriter.writePush(myTable.KindOf(className), to_string(myTable.IndexOf(className)));
+        myWriter.writePop("argument", "0");
+      }
+      else
+      {
+        myWriter.writePush("this", "0");
+        myWriter.writePop("argument", "0");
+      }
+    }
+
     nArgs = compileExpressionList();
-    myWriter.writeCall(className, to_string(nArgs));
+    myWriter.writeCall(outputString, to_string(nArgs));
     loadNxtToken(); //)
     loadNxtToken(); //;
   }
@@ -334,19 +350,13 @@ public:
       myWriter.writePush("constant", "0");
       myWriter.writeReturn();
       myWriter.writePop("temp", "0");
-      myWriter.writeBreak();
+      // myWriter.writeBreak();
     }
-    // else if (myTable.getFunctionType(currentFunctionName) == "constructor")
-    // {
-    //   myWriter.writePush("pointer", "0");
-    //   compileExpression();
-    //   myWriter.writeReturn();
-    // }
     else
     {
       compileExpression(); //push return value onto stack
       myWriter.writeReturn();
-      myWriter.writeBreak();
+      // myWriter.writeBreak();
     }
 
     loadNxtToken(); // ;

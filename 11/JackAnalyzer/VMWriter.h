@@ -66,7 +66,7 @@ public:
 
   void writeReturn()
   {
-    outputFile << "return \n";
+    outputFile << "return" << endl;
   }
 
   void writeComment(string comment)
