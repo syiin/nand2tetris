@@ -128,7 +128,7 @@ public:
 
     for (; i < outputVarVec.size(); i = i + 2) //handle function | constructor
     {
-      myTable.define(outputVarVec[i + 1], "argument", outputVarVec[i]);
+      myTable.define(outputVarVec[i + 1], "argument", outputVarVec[i]); //(eg. var int x >> arr[i]=int, arr[i+1]=x)
     }
 
     loadNxtToken(); // )
@@ -151,13 +151,13 @@ public:
     {
       myWriter.writePush("constant", to_string(myTable.FieldCount() + lclVar));
       myWriter.writeCall("Memory.alloc", "1");
-      myWriter.writePop("pointer", "0");
+      myWriter.writePop("pointer", "0"); //allocate memory on heap and give the address of this new memory to pointer 0
     }
 
     if (myTable.getFunctionType(currentFunctionName) == "method")
     {
       myWriter.writePush("argument", "0");
-      myWriter.writePop("pointer", "0");
+      myWriter.writePop("pointer", "0"); //pass address of the current object as argument 0 if method
     }
 
     while (tokenString != "}")
@@ -178,7 +178,7 @@ public:
 
     for (int i = 2; i < outputVarVec.size(); i++)
     {
-      myTable.define(outputVarVec[i], outputVarVec[0], outputVarVec[1]);
+      myTable.define(outputVarVec[i], outputVarVec[0], outputVarVec[1]); //var int x,y >> (x|y, var, int)
     }
 
     loadNxtToken(); //;
@@ -253,19 +253,19 @@ public:
     compileStatements();
     loadNxtToken(); //}
 
-    myWriter.writeGoTo(L2);
+    myWriter.writeGoTo(L2); //exit the if loop
 
     if (tokenString == "else") //handle else case
     {
-      loadNxtToken(); //else
-      loadNxtToken(); //{
-      myWriter.writeLabel(L1);
+      loadNxtToken();          //else
+      loadNxtToken();          //{
+      myWriter.writeLabel(L1); //or exit here
       while (tokenString != "}")
         compileStatements();
 
       loadNxtToken(); //}
     }
-    myWriter.writeLabel(L1);
+    myWriter.writeLabel(L1); //exit the else loop
     myWriter.writeLabel(L2);
   }
 
@@ -284,15 +284,15 @@ public:
 
     compileExpression();
     myWriter.writeArithmetic("not");
-    myWriter.writeIf(L2); //if-goto L2
+    myWriter.writeIf(L2); //if-goto L2 - failure case
 
     loadNxtToken(); //)
     loadNxtToken(); //{
 
     compileStatements();
     loadNxtToken();          //}
-    myWriter.writeGoTo(L1);  //goto L1
-    myWriter.writeLabel(L2); // label L2
+    myWriter.writeGoTo(L1);  //goto L1 - return to the top of while
+    myWriter.writeLabel(L2); // label L2 - exit while loop
     labelCounter++;
   }
 
@@ -305,7 +305,7 @@ public:
 
     loadNxtToken();
 
-    //handle defined class instance call
+    //handle defined class instance call (ie. let square = new Square(), square.moveUp())
     if (myTable.subroutineTableContains(tokenString) || myTable.classTableContains(tokenString))
     {
       className = myTable.TypeOf(tokenString);
@@ -320,7 +320,7 @@ public:
 
       while (tokenString != "(")
       {
-        outputString = outputString + tokenString; //  className. + methodName
+        outputString = outputString + tokenString; //  className.methodName
         loadNxtToken();
       }
     }
@@ -330,7 +330,7 @@ public:
       {
         if (tokenString == ".")
         {
-          className = myTokenizer.lookBehindString();
+          className = myTokenizer.lookBehindString(); //get the className from the whole string
         }
         outputString = outputString + tokenString; // class.functionName | functionName
 
@@ -338,7 +338,7 @@ public:
       }
     }
 
-    if (className == "") //handle if internal method
+    if (className == "") //handle if internal method (eg. draw() called within Square class)
     {
       myWriter.writePush("pointer", "0");
       outputString = currentClassName + "." + outputString;
@@ -376,11 +376,10 @@ public:
   {
     int nArgs = 0;
 
-    // while (tokenString != ")" && tokenString != ";")
     while (tokenString != ")")
     {
-      loadNxtToken(); // ,
-      if (tokenString != ")")
+      loadNxtToken();         // load past '(' and ','
+      if (tokenString != ")") // in case "()"
         nArgs++;
       compileExpression();
     }
@@ -420,16 +419,29 @@ public:
       loadNxtToken(); //(
       compileExpression();
     }
+    else if (tokenString == "[")
+    {
+      string identifier = lookBehindString;
+      string iKind = myTable.KindOf(identifier);
+      int iIdx = myTable.IndexOf(identifier);
+      myWriter.writePush(iKind, to_string(iIdx)); //push base array base
+
+      loadNxtToken();      //[
+      compileExpression(); //returns on ]
+      loadNxtToken();      //]
+
+      myWriter.writeArithmetic("add");   //add the expression to the base
+      myWriter.writePop("pointer", "1"); //THAT to the address
+      myWriter.writePush("that", "0");   //push the array value onto the stack
+    }
     else if (tokenType == "identifier" && tokenString != "this") //this is a variable
     {
-      int idx;
       string type;
-      string kind;
 
-      kind = myTable.KindOf(tokenString);
-      idx = myTable.IndexOf(tokenString);
+      string kind = myTable.KindOf(tokenString);
+      int idx = myTable.IndexOf(tokenString);
 
-      if (kind == "field")
+      if (kind == "field") //if its a field, access THIS segment
       {
         myWriter.writePush("this", to_string(idx));
       }
@@ -438,26 +450,26 @@ public:
         myWriter.writePush(kind, to_string(idx));
       }
     }
-    else if (tokenString == "this")
+    else if (tokenString == "this") //if segment is THIS, push the address that it points to. (eg. return this will save the object address)
     {
       myWriter.writePush("pointer", "0");
     }
-    else if (tokenString == "true")
+    else if (tokenString == "true") //true is represented as -1
     {
       myWriter.writePush("constant", "1");
       myWriter.writeArithmetic("neg");
     }
-    else if (tokenString == "false")
+    else if (tokenString == "false") //false as 0
     {
       myWriter.writePush("constant", "0");
     }
-    else if (tokenString == "-" && lookBehindString == "(" && lookBehindString == "[" && lookBehindString == "=")
+    else if (tokenString == "-" && lookBehindString == "(" && lookBehindString == "[" && lookBehindString == "=") // '-' when not preceded by opening symbols is a neg expression
     {
       myWriter.writePush("constant", nextTokenString);
       myWriter.writeArithmetic("neg");
       loadNxtToken();
     }
-    else if (tokenString == "~" && lookBehindType == "symbol")
+    else if (tokenString == "~" && lookBehindType == "symbol") //handle not
     {
       loadNxtToken(); // (
       compileExpression();
@@ -468,12 +480,27 @@ public:
     {
       myWriter.writePush("constant", tokenString);
     }
+    else if (tokenType == "stringConstant")
+    {
+      int stringLen = tokenString.length();
+      int charToInt;
+
+      myWriter.writePush("constant", to_string(stringLen));
+      myWriter.writeCall("String.new", "1"); //create a new string object of string length
+
+      for (auto const &character : tokenString)
+      {
+        int charToInt = character;
+        myWriter.writePush("constant", to_string(charToInt));
+        myWriter.writeCall("String.appendChar", "2"); //call each ascii rep of char and append to string object
+      }
+    }
     else if (tokenType == "symbol" && checkIfOps(tokenString))
     {
       string opCmd = arithOpsTable[tokenString];
       loadNxtToken();
       compileTerm();
-      myWriter.writeArithmetic(opCmd);
+      myWriter.writeArithmetic(opCmd); //recursive postfix operations handling
     }
   }
 
