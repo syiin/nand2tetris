@@ -268,3 +268,21 @@ tuple<string, string, string> compileTerm()
     return outputTuple;
   }
 }
+
+string identifier = lookBehindString;
+string iKind = myTable.KindOf(identifier);
+int iIdx = myTable.IndexOf(identifier);
+myWriter.writePush(iKind, to_string(iIdx)); //arr[0]
+
+loadNxtToken();      //[
+compileExpression(); //expression_1
+loadNxtToken();      //]
+
+myWriter.writeArithmetic("add"); // arr[expression_1]
+if (tokenString == "=")
+  loadNxtToken();
+compileExpression();               //expression_2
+myWriter.writePop("temp", "0");    //temp[0] = expression_2
+myWriter.writePop("pointer", "1"); //THAT = &arr[expression_1]
+myWriter.writePush("temp", "0");   //stack = expression_2
+myWriter.writePop("that", "0");    //*THAT = expression_2
