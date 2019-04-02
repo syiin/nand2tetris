@@ -34,6 +34,11 @@ public:
     subroutineTable.clear();
   }
 
+  void startClass()
+  {
+    classTable.clear();
+  }
+
   void define(string name, string kind, string type)
   {
     if (kind == "static" || kind == "field")
@@ -117,6 +122,16 @@ public:
     {
       return classTable[name].idx;
     }
+  }
+
+  bool subroutineTableContains(string name)
+  {
+    return checkIfContainsName(subroutineTable, name);
+  }
+
+  bool classTableContains(string name)
+  {
+    return checkIfContainsName(classTable, name);
   }
 
   bool checkIfContainsName(map<string, SymbolEntry> tableToSearch, string name)

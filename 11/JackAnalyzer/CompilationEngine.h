@@ -39,6 +39,7 @@ public:
     myWriter.startWriter(outputFileName);
     initArithOpsTable();
     // myTokenizer.printTokens();
+    myTable.startClass();
     compileClass();
     myWriter.close();
   }
@@ -120,17 +121,10 @@ public:
       loadNxtToken();
     }
 
-    if (myTable.getFunctionType(currentFunctionName) == "method") //handle method
-    {
-      myTable.define("this", "argument", "0");
-    }
-
     for (int i = 0; i < outputVarVec.size(); i = i + 2) //handle function | constructor
     {
       myTable.define(outputVarVec[i + 1], "argument", outputVarVec[i]);
     }
-
-    myTable.printTable();
 
     loadNxtToken(); // )
     compileSubroutineBody();
@@ -145,7 +139,20 @@ public:
     {
       lclVar = lclVar + compileVarDec();
     }
+
+    if (myTable.getFunctionType(currentFunctionName) == "method") //handle method
+    {
+      myTable.define("this", "argument", "0");
+    }
+
     myWriter.writeFunction(currentFunctionName, lclVar);
+
+    if (myTable.getFunctionType(currentFunctionName) == "constructor")
+    {
+      myWriter.writePush("constant", to_string(lclVar));
+      myWriter.writeCall("Memory.alloc", "1");
+      myWriter.writePop("pointer", "0");
+    }
 
     while (tokenString != "}")
     {
@@ -202,15 +209,23 @@ public:
         compileExpression();
         loadNxtToken(); // ]
       }
-
       idx = myTable.IndexOf(tokenString);
       kind = myTable.KindOf(tokenString);
       loadNxtToken();
     }
     loadNxtToken(); //=
+
     compileExpression();
-    myWriter.writePop(kind, to_string(idx)); // pop segment idx
-    loadNxtToken();                          //;
+
+    if (kind == "field")
+    {
+      myWriter.writePop("this", to_string(idx));
+    }
+    else
+    {
+      myWriter.writePop(kind, to_string(idx)); // pop segment idx
+    }
+    loadNxtToken(); //;
   }
 
   void compileIf()
@@ -244,6 +259,7 @@ public:
 
       loadNxtToken(); //}
     }
+    myWriter.writeLabel(L1);
     myWriter.writeLabel(L2);
   }
 
@@ -282,14 +298,28 @@ public:
     int nArgs;
 
     loadNxtToken();
-    while (tokenString != "(")
+    if (myTable.subroutineTableContains(tokenString) || myTable.classTableContains(tokenString))
     {
-      className = className + tokenString; // class.functionName | functionName
+      className = myTable.TypeOf(tokenString);
       loadNxtToken();
+
+      while (tokenString != "(")
+      {
+        className = className + tokenString; // classInstance.methodName
+        loadNxtToken();
+      }
+    }
+    else
+    {
+      while (tokenString != "(")
+      {
+        className = className + tokenString; // class.functionName | functionName
+        loadNxtToken();
+      }
     }
 
     nArgs = compileExpressionList();
-    myWriter.writeCall(className, nArgs);
+    myWriter.writeCall(className, to_string(nArgs));
     loadNxtToken(); //)
     loadNxtToken(); //;
   }
@@ -304,11 +334,19 @@ public:
       myWriter.writePush("constant", "0");
       myWriter.writeReturn();
       myWriter.writePop("temp", "0");
+      myWriter.writeBreak();
     }
+    // else if (myTable.getFunctionType(currentFunctionName) == "constructor")
+    // {
+    //   myWriter.writePush("pointer", "0");
+    //   compileExpression();
+    //   myWriter.writeReturn();
+    // }
     else
     {
       compileExpression(); //push return value onto stack
       myWriter.writeReturn();
+      myWriter.writeBreak();
     }
 
     loadNxtToken(); // ;
@@ -355,23 +393,36 @@ public:
       }
       int nArgs = compileExpressionList();
 
-      myWriter.writeCall(outputString, nArgs);
+      myWriter.writeCall(outputString, to_string(nArgs));
     }
     else if (tokenString == "(")
     {
       loadNxtToken(); //(
       compileExpression();
     }
-    else if (tokenType == "identifier") //this is a variable
+    else if (tokenType == "identifier" && tokenString != "this") //this is a variable
     {
       int idx;
       string type;
       string kind;
 
-      idx = myTable.IndexOf(tokenString);
       kind = myTable.KindOf(tokenString);
+      idx = myTable.IndexOf(tokenString);
 
-      myWriter.writePush(kind, to_string(idx));
+      if (kind == "field")
+      {
+        myWriter.writePush("argument", "0");
+        myWriter.writePop("pointer", "0");
+        myWriter.writePush("this", to_string(idx));
+      }
+      else
+      {
+        myWriter.writePush(kind, to_string(idx));
+      }
+    }
+    else if (tokenString == "this")
+    {
+      myWriter.writePush("pointer", "0");
     }
     else if (tokenString == "true")
     {

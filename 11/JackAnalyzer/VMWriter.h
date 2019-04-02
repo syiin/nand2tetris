@@ -54,9 +54,9 @@ public:
     outputFile << "if-goto " << label << endl;
   }
 
-  void writeCall(string name, int nArgs)
+  void writeCall(string name, string nArgs)
   {
-    outputFile << "call " << name << " " << to_string(nArgs) << endl;
+    outputFile << "call " << name << " " << nArgs << endl;
   }
 
   void writeFunction(string name, int nLocals)
@@ -72,6 +72,11 @@ public:
   void writeComment(string comment)
   {
     outputFile << "\tCOMMENT:\t" << comment << endl;
+  }
+
+  void writeBreak()
+  {
+    outputFile << endl;
   }
 
   void close()
