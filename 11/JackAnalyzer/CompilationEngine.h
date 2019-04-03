@@ -42,13 +42,11 @@ public:
     // myTokenizer.printTokens();
     myTable.startClass();
     compileClass();
-
     myWriter.close();
   }
 
   void compileClass()
   {
-
     loadNxtToken();                   //empty space
     loadNxtToken();                   //class
     setCurrentClassName(tokenString); //class identifier
@@ -58,7 +56,6 @@ public:
     if (!checkIfFunction())
     {
       compileClassVarDec();
-
       loadNxtToken(); //;
     }
     else
@@ -130,8 +127,6 @@ public:
     {
       myTable.define(outputVarVec[i + 1], "argument", outputVarVec[i]); //(eg. var int x >> arr[i]=int, arr[i+1]=x)
     }
-
-    // myTable.printTable();
 
     loadNxtToken(); // )
     compileSubroutineBody();
@@ -315,16 +310,8 @@ public:
     if (myTable.subroutineTableContains(tokenString) || myTable.classTableContains(tokenString))
     {
       className = myTable.TypeOf(tokenString);
-      string classKind = myTable.KindOf(tokenString);
-      string classIdx = to_string(myTable.IndexOf(tokenString));
-      if (classKind == "field")
-        classKind = "this";
-
-      myWriter.writePush(classKind, classIdx);
       nArgs++;
-      outputString = className;
-
-      loadNxtToken();
+      outputString = createObjInstanceMethodString(tokenString);
 
       while (tokenString != "(")
       {
@@ -541,7 +528,7 @@ public:
   {
     string outputString = "";
     string className = myTable.TypeOf(tokenString);
-    string classKind = "";
+    string classKind = myTable.KindOf(tokenString);
 
     if (myTable.KindOf(tokenString) == "field")
       classKind = "this";
