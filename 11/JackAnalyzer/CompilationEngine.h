@@ -36,6 +36,7 @@ public:
   {
     labelCounter = 0;
     myTokenizer.loadTokens(inputFileName);
+
     myWriter.startWriter(outputFileName);
     initArithOpsTable();
     // myTokenizer.printTokens();
