@@ -1,15 +1,12 @@
 function Main.main 3
 push constant 10
 call Array.new 1
-eq
 pop local 0
 push constant 5
 call Array.new 1
-eq
 pop local 1
 push constant 1
 call Array.new 1
-eq
 pop local 2
 push local 0
 push constant 3
@@ -107,7 +104,6 @@ push constant 0
 add
 pop pointer 1
 push that 0
-eq
 pop local 2
 push constant 43
 call String.new 1
@@ -405,13 +401,12 @@ pop temp 0
 call Output.println 0
 pop temp 0
 push constant 0
-eq
 pop local 2
 push local 2
 push constant 0
 eq
 not
-if-goto L0
+if-goto Main_L0
 push local 0
 push constant 10
 call Main.fill 2
@@ -421,7 +416,6 @@ push constant 3
 add
 pop pointer 1
 push that 0
-eq
 pop local 2
 push local 2
 push constant 1
@@ -436,7 +430,6 @@ push constant 7
 add
 pop pointer 1
 push that 0
-eq
 pop local 2
 push local 2
 push constant 1
@@ -451,7 +444,6 @@ push constant 3
 add
 pop pointer 1
 push that 0
-eq
 pop local 1
 push local 1
 push constant 1
@@ -471,9 +463,9 @@ pop temp 0
 pop pointer 1
 push temp 0
 pop that 0
-goto L1
-label L0
-label L1
+goto Main_L1
+label Main_L0
+label Main_L1
 push constant 44
 call String.new 1
 push constant 84
@@ -686,14 +678,13 @@ push constant 2
 call Math.multiply 2
 return
 function Main.fill 0
-label L2
+label Main_L2
 push argument 1
 push constant 0
 gt
 not
-if-goto L3
+if-goto Main_L3
 push argument 1
-eq
 push constant 1
 sub
 pop argument 1
@@ -706,7 +697,7 @@ pop temp 0
 pop pointer 1
 push temp 0
 pop that 0
-goto L2
-label L3
+goto Main_L2
+label Main_L3
 push constant 0
 return

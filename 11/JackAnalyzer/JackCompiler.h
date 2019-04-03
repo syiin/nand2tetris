@@ -22,6 +22,7 @@ public:
   {
     for (auto const &file : inputDir)
     {
+      cout << "Loading Engine: " << endl;
       cout << file.second << endl;
       myEngine.setOutputFileName(file.second);
       myEngine.loadEngine(file.second);

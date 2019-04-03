@@ -37,6 +37,7 @@ public:
   void startClass()
   {
     classTable.clear();
+    functionTable.clear();
   }
 
   void define(string name, string kind, string type)
@@ -129,6 +130,11 @@ public:
     }
   }
 
+  bool anyTableContains(string name)
+  {
+    return (subroutineTableContains(name) || classTableContains(name));
+  }
+
   bool subroutineTableContains(string name)
   {
     return checkIfContainsName(subroutineTable, name);
@@ -142,6 +148,18 @@ public:
   bool checkIfContainsName(map<string, SymbolEntry> tableToSearch, string name)
   {
     for (auto const &symbol : tableToSearch)
+    {
+      if (symbol.first == name)
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool checkFunctionTableContains(string name)
+  {
+    for (auto const &symbol : functionTable)
     {
       if (symbol.first == name)
       {
