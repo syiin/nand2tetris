@@ -129,6 +129,11 @@ public:
     }
   }
 
+  bool anyTableContains(string name)
+  {
+    return (subroutineTableContains(name) || classTableContains(name));
+  }
+
   bool subroutineTableContains(string name)
   {
     return checkIfContainsName(subroutineTable, name);

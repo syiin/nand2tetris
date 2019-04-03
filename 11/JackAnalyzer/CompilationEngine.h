@@ -42,11 +42,13 @@ public:
     // myTokenizer.printTokens();
     myTable.startClass();
     compileClass();
+
     myWriter.close();
   }
 
   void compileClass()
   {
+
     loadNxtToken();                   //empty space
     loadNxtToken();                   //class
     setCurrentClassName(tokenString); //class identifier
@@ -55,18 +57,7 @@ public:
 
     if (!checkIfFunction())
     {
-      vector<string> outputVarVec;
-      while (tokenString != ";")
-      {
-        if (tokenString != ",")
-          outputVarVec.push_back(tokenString);
-        loadNxtToken();
-      }
-
-      for (int i = 2; i < outputVarVec.size(); i++)
-      {
-        myTable.define(outputVarVec[i], outputVarVec[0], outputVarVec[1]); //field int x,y >> (x|y, var, int)
-      }
+      compileClassVarDec();
 
       loadNxtToken(); //;
     }
@@ -83,7 +74,8 @@ public:
 
   void compileClassVarDec()
   {
-    while (tokenString == "field")
+    vector<string> outputVarVec;
+    while (tokenString == "field" || tokenString == "static")
     {
       compileVarDec();
     }
@@ -99,7 +91,6 @@ public:
     string outputString;
     string rtnType;
     string functionType;
-
     functionType = tokenString; // function | method | constructor
     loadNxtToken();
     rtnType = tokenString; //return type int | char | identifier
@@ -121,29 +112,26 @@ public:
     string type;
     vector<string> outputVarVec;
 
-    int i = 0;
-
-    loadNxtToken(); // argument type
-
     if (myTable.getFunctionType(currentFunctionName) == "method") //handle method
     {
       myTable.define("this", "argument", myTable.getFunctionType(currentFunctionName));
-      i = 2;
     }
 
     while (tokenString != ")") //push back only types and argument names
     {
-      if (tokenString != ",")
+      loadNxtToken();
+      if (tokenString != "," && tokenString != ")")
       {
         outputVarVec.push_back(tokenString);
       }
-      loadNxtToken();
     }
 
-    for (; i < outputVarVec.size(); i = i + 2) //handle function | constructor
+    for (int i = 0; i < outputVarVec.size(); i = i + 2) //handle function | constructor
     {
       myTable.define(outputVarVec[i + 1], "argument", outputVarVec[i]); //(eg. var int x >> arr[i]=int, arr[i+1]=x)
     }
+
+    // myTable.printTable();
 
     loadNxtToken(); // )
     compileSubroutineBody();
@@ -247,6 +235,8 @@ public:
     else
     {
       loadNxtToken(); //=
+      loadNxtToken(); //
+
       compileExpression();
       myWriter.writePop(kind, to_string(idx)); // pop segment idx
       loadNxtToken();                          //;
@@ -255,52 +245,49 @@ public:
 
   void compileIf()
   {
-    string L1 = "L" + to_string(labelCounter);
+    string L1 = currentClassName + "_L" + to_string(labelCounter);
     labelCounter++;
-    string L2 = "L" + to_string(labelCounter);
+    string L2 = currentClassName + "_L" + to_string(labelCounter);
     labelCounter++;
 
     loadNxtToken(); //if
     loadNxtToken(); //(
+
     compileExpression();
-    loadNxtToken(); // )
-
     myWriter.writeArithmetic("not");
-
     myWriter.writeIf(L1);
+
+    loadNxtToken(); // )
     loadNxtToken(); // {
     compileStatements();
     loadNxtToken(); //}
 
     myWriter.writeGoTo(L2); //exit the if loop
 
+    myWriter.writeLabel(L1);
     if (tokenString == "else") //handle else case
     {
-      loadNxtToken();          //else
-      loadNxtToken();          //{
-      myWriter.writeLabel(L1); //or exit here
+      loadNxtToken(); //else
+      loadNxtToken(); //{
       while (tokenString != "}")
         compileStatements();
 
       loadNxtToken(); //}
     }
-    myWriter.writeLabel(L1); //exit the else loop
     myWriter.writeLabel(L2);
   }
 
   void compileWhile()
   {
-    string L1 = "L" + to_string(labelCounter);
+    string L1 = currentClassName + "_L" + to_string(labelCounter);
     labelCounter++;
-    string L2 = "L" + to_string(labelCounter);
-    labelCounter++;
-
-    myWriter.writeLabel(L1); // label L1
+    string L2 = currentClassName + "_L" + to_string(labelCounter);
     labelCounter++;
 
     loadNxtToken(); //while
     loadNxtToken(); //(
 
+    myWriter.writeLabel(L1); // label L1
     compileExpression();
     myWriter.writeArithmetic("not");
     myWriter.writeIf(L2); //if-goto L2 - failure case
@@ -312,7 +299,6 @@ public:
     loadNxtToken();          //}
     myWriter.writeGoTo(L1);  //goto L1 - return to the top of while
     myWriter.writeLabel(L2); // label L2 - exit while loop
-    labelCounter++;
   }
 
   void compileDo()
@@ -325,11 +311,14 @@ public:
     loadNxtToken();
 
     //handle defined class instance call (ie. let square = new Square(), square.moveUp())
+
     if (myTable.subroutineTableContains(tokenString) || myTable.classTableContains(tokenString))
     {
       className = myTable.TypeOf(tokenString);
       string classKind = myTable.KindOf(tokenString);
       string classIdx = to_string(myTable.IndexOf(tokenString));
+      if (classKind == "field")
+        classKind = "this";
 
       myWriter.writePush(classKind, classIdx);
       nArgs++;
@@ -423,14 +412,41 @@ public:
 
     if (nextTokenString == ".") //this is a method call
     {
-      while (tokenString != "(")
+      string className = "";
+      int nArgs = 0;
+
+      if (myTable.anyTableContains(tokenString))
       {
-        outputString = outputString + tokenString; //class.method
-        loadNxtToken();
+        className = myTable.TypeOf(tokenString);
+        nArgs++;
+        outputString = createObjInstanceMethodString(tokenString);
       }
-      int nArgs = compileExpressionList();
+      else //handle function calls from elsewhere or internal method calls
+      {
+        while (tokenString != "(")
+        {
+          if (tokenString == ".")
+          {
+            className = myTokenizer.lookBehindString(); //get the className from the whole string
+          }
+          outputString = outputString + tokenString; // class.functionName | functionNam
+          loadNxtToken();
+        }
+      }
+
+      if (className == "") //handle if internal method (eg. draw() called within Square class)
+      {
+        myWriter.writePush("pointer", "0");
+        outputString = currentClassName + "." + outputString;
+        nArgs++;
+      }
+
+      nArgs = nArgs + compileExpressionList();
 
       myWriter.writeCall(outputString, to_string(nArgs));
+
+      if (myTable.getFunctionType(outputString) == "method")
+        myWriter.writePop("temp", "0");
     }
     else if (tokenString == "(")
     {
@@ -480,7 +496,7 @@ public:
     {
       myWriter.writePush("constant", "0");
     }
-    else if (tokenString == "-" && lookBehindString == "(" && lookBehindString == "[" && lookBehindString == "=") // '-' when not preceded by opening symbols is a neg expression
+    else if (tokenString == "-" && lookBehindString == "(") // '-' when not preceded by opening symbols is a neg expression
     {
       myWriter.writePush("constant", nextTokenString);
       myWriter.writeArithmetic("neg");
@@ -521,7 +537,30 @@ public:
     }
   }
 
-  void setOutputFileName(string outputFileString)
+  string createObjInstanceMethodString(string name)
+  {
+    string outputString = "";
+    string className = myTable.TypeOf(tokenString);
+    string classKind = "";
+
+    if (myTable.KindOf(tokenString) == "field")
+      classKind = "this";
+
+    myWriter.writePush(classKind, to_string(myTable.IndexOf(tokenString)));
+    outputString = className;
+    loadNxtToken();
+
+    while (tokenString != "(")
+    {
+      outputString = outputString + tokenString; //  className.methodName
+      loadNxtToken();
+    }
+
+    return outputString;
+  }
+
+  void
+  setOutputFileName(string outputFileString)
   {
     outputFileName = outputFileString;
   }
