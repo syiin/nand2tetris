@@ -101,7 +101,7 @@ public:
       }
       return classTable[name].kind;
     }
-    return "NOT FOUND:\t" + name;
+    return "NOT FOUND";
   }
 
   string TypeOf(string name)
@@ -114,7 +114,7 @@ public:
     {
       return classTable[name].type;
     }
-    return "NOT FOUND:\t" + name;
+    return "NOT FOUND";
   }
 
   int IndexOf(string name)

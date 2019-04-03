@@ -93,7 +93,9 @@ public:
   {
     if (tokenType() == "stringConstant")
     {
-      return stringTokens[tokenCount];
+      int start = stringTokens[tokenCount].find('"') + 1;
+      int end = stringTokens[tokenCount].find_last_of('"') - 1;
+      return stringTokens[tokenCount].substr(start, end);
     }
   }
 
@@ -162,9 +164,6 @@ public:
   void initStringTokens(string fileName)
   {
     populateTokens(fileName);
-
-    splitBySymbols();
-    processStringVec();
     splitBySymbols();
     removeTokenSpaces();
   }
@@ -217,55 +216,14 @@ public:
   }
 
   //VECTOR MANIPULATION FUNCTIONS
-
-  void removeEmptyItems()
-  {
-    for (int i = 0; i < stringTokens.size(); i++)
-    {
-      if ((stringTokens[i]) == "")
-        stringTokens.erase(stringTokens.begin() + i);
-    }
-  }
-
-  void processStringVec()
-  {
-    vector<string> newVec;
-    string stringConstant;
-    string extraChars;
-
-    for (auto const &token : stringTokens)
-    {
-      if (isString(token))
-      {
-        stringConstant = leaveOnlyQuotations(token);
-        extraChars = extraAfterQuotations(token);
-        newVec.push_back(stringConstant);
-        newVec.push_back(extraChars);
-      }
-      else
-      {
-        newVec.push_back(token);
-      }
-    }
-    stringTokens = newVec;
-  }
-
   vector<string> splitVecByChar(vector<string> inputVec, char c)
   {
     vector<string> tempVec;
     vector<string> outputVec;
     for (vector<string>::iterator it = inputVec.begin(); it != inputVec.end(); ++it)
     {
-      if (!isString(*it))
-      {
-        tempVec = splitStringByChar(*it, c);
-        outputVec.insert(outputVec.end(), tempVec.begin(), tempVec.end());
-      }
-      else
-      {
-        tempVec = processString(*it);
-        outputVec.insert(outputVec.end(), tempVec.begin(), tempVec.end());
-      }
+      tempVec = splitStringByChar(*it, c);
+      outputVec.insert(outputVec.end(), tempVec.begin(), tempVec.end());
     };
     return outputVec;
   }
@@ -288,13 +246,11 @@ public:
         tempString = tempString + c;
       }
     }
-
     outputVec.push_back(tempString);
     return outputVec;
   }
 
-  vector<string>
-  splitStringAndRemoveByChar(string line, char c)
+  vector<string> splitStringAndRemoveByChar(string line, char c)
   {
     stringstream inputString(line);
     string segment;
@@ -318,6 +274,7 @@ public:
     {
       if (checkNotCommentOrSpace(segment))
       {
+        segment = leaveOnlyQuotations(segment);
         outputVector.push_back(segment);
       }
     }
@@ -330,13 +287,14 @@ public:
     vector<string> outputVec;
     for (vector<string>::iterator it = inputVec.begin(); it != inputVec.end(); ++it)
     {
-      if (!isString(*it))
+      if (!isString(removeSpaces(*it)))
       {
         tempVec = splitStringAndRemoveByChar(*it, c);
         outputVec.insert(outputVec.end(), tempVec.begin(), tempVec.end());
       }
       else
       {
+
         tempVec = processString(*it);
         outputVec.insert(outputVec.end(), tempVec.begin(), tempVec.end());
       }
@@ -348,17 +306,11 @@ public:
 
   string leaveOnlyQuotations(string str)
   {
-    int start = str.find('"');
-    int end = str.find_last_of('"');
-
-    return str.substr(start, end + 1);
-  }
-
-  string extraAfterQuotations(string str)
-  {
-    int start = str.find_last_of('"');
-    int end = str.length();
-    return str.substr(start + 1, end);
+    string tempString = str;
+    int start = tempString.find('"');
+    int end = tempString.find_last_of('"') - 1;
+    return tempString.substr(start, end);
+    ;
   }
 
   string removeSpaces(std::string str)

@@ -219,38 +219,33 @@ public:
 
   void compileLet()
   {
-    loadNxtToken();
-    int idx = myTable.IndexOf(tokenString);
-    string kind = myTable.KindOf(tokenString);
-    if (kind == "field")
-      kind = "this";
-
-    if (myTokenizer.lookAheadString() == "[")
+    int idx;
+    string kind;
+    while (tokenString != "=")
     {
-      myWriter.writePush(kind, to_string(idx));
-
-      loadNxtToken(); //[
-      compileExpression();
-      loadNxtToken(); //]
-
-      myWriter.writeArithmetic("add");
-
-      loadNxtToken(); //=
-
-      compileExpression();
-      myWriter.writePop("temp", "0");
-      myWriter.writePop("pointer", "1");
-      myWriter.writePush("temp", "0");
-      myWriter.writePop("that", "0");
+      if (tokenString == "[")
+      {
+        loadNxtToken(); // [
+        compileExpression();
+        loadNxtToken(); // ]
+      }
+      idx = myTable.IndexOf(tokenString);
+      kind = myTable.KindOf(tokenString);
       loadNxtToken();
+    }
+    loadNxtToken(); //=
+
+    compileExpression();
+
+    if (kind == "field")
+    {
+      myWriter.writePop("this", to_string(idx));
     }
     else
     {
-      loadNxtToken(); //=
-      compileExpression();
       myWriter.writePop(kind, to_string(idx)); // pop segment idx
-      loadNxtToken();                          //;
     }
+    loadNxtToken(); //;
   }
 
   void compileIf()
@@ -351,7 +346,8 @@ public:
         {
           className = myTokenizer.lookBehindString(); //get the className from the whole string
         }
-        outputString = outputString + tokenString; // class.functionName | functionNam
+        outputString = outputString + tokenString; // class.functionName | functionName
+
         loadNxtToken();
       }
     }
@@ -437,21 +433,22 @@ public:
       loadNxtToken(); //(
       compileExpression();
     }
-    else if (nextTokenString == "[")
+    else if (tokenString == "[")
     {
-      string identifier = tokenString;
+      string identifier = lookBehindString;
       string iKind = myTable.KindOf(identifier);
       int iIdx = myTable.IndexOf(identifier);
+      myWriter.writePush(iKind, to_string(iIdx)); //push base array base
 
-      myWriter.writePush(iKind, to_string(iIdx));
-      loadNxtToken(); // [
-      compileExpression();
+      loadNxtToken();      //[
+      compileExpression(); //returns on ]
+      loadNxtToken();      //]
 
-      myWriter.writeArithmetic("add");
-      myWriter.writePop("pointer", "1");
-      myWriter.writePush("that", "0");
+      myWriter.writeArithmetic("add");   //add the expression to the base
+      myWriter.writePop("pointer", "1"); //THAT to the address
+      myWriter.writePush("that", "0");   //push the array value onto the stack
     }
-    else if (tokenType == "identifier" && tokenString != "this" && nextTokenString != "[") //this is a variable
+    else if (tokenType == "identifier" && tokenString != "this") //this is a variable
     {
       string type;
 
@@ -476,7 +473,7 @@ public:
       myWriter.writePush("constant", "1");
       myWriter.writeArithmetic("neg");
     }
-    else if (tokenString == "false" || tokenString == "null") //false | null as 0
+    else if (tokenString == "false") //false as 0
     {
       myWriter.writePush("constant", "0");
     }
