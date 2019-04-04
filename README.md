@@ -13,6 +13,5 @@ Project:
 - [x] 8 &nbsp;&nbsp;&nbsp; VM translator can now handle function declarations, function calls, function returns and bootstrap system initialisation as well as if and goto branching statements
 - [x] 9 &nbsp;&nbsp;&nbsp; Just looks around and tinkered with the Jack code
 - [x] 10 &nbsp;&nbsp;&nbsp; Built a token analyzer that parses Jack code with recursive parsing and converts it into a XML file
-- [ ] 11
+- [x] 11 &nbsp;&nbsp;&nbsp; Build a compiler in C++ that converted a Java-like language into a virtual machine language that runs on the stack machine
 - [ ] 12
-- [ ] 13
